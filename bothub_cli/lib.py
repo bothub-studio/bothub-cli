@@ -13,3 +13,4 @@ CONFIG = Config()
 def authenticate(username, password):
     token = API.authenticate(username, password)
     CONFIG.set('default', 'auth_token', token)
+    CONFIG.save()

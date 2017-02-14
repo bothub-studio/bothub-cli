@@ -7,5 +7,9 @@ class CliException(Exception):
     pass
 
 
-class InvalidCredential(Exception):
+class InvalidCredential(CliException):
+    pass
+
+
+class NotFound(CliException):
     pass
