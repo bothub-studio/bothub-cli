@@ -2,6 +2,7 @@
 
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
+import os
 import click
 from bothub_cli import lib
 from bothub_cli import exceptions as exc
@@ -24,17 +25,32 @@ def configure():
         click.secho('Connecting to server...', fg='green')
         lib.authenticate(username, password)
         click.secho('Authorized', fg='green')
-    except exc.CliException as e:
-        click.secho('{}: {}'.format(e.__class__.__name__, e), fg='red')
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 
 @cli.command()
 def init():
-    click.echo('init')
+    '''Initialize project'''
+    click.echo('Initialize a new project')
+    while True:
+        try:
+            if os.path.isfile('bothub.yml'):
+                raise exc.Duplicated('Project definition file [bothub.yml] is already exists')
+            name = click.prompt('Project name')
+            click.secho('Creating project...', fg='green')
+            lib.init(name)
+            click.secho('Created.', fg='green')
+            break
+        except exc.CliException as ex:
+            click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 
 @cli.command()
 def deploy():
+    '''Deploy project'''
+    lib.package()
+    lib.upload()
     click.echo('deploy')
 
 

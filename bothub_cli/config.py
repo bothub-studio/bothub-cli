@@ -4,33 +4,36 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 import os
 import codecs
+
+import yaml
+
 from six.moves.configparser import ConfigParser
 
 
 class Config(object):
     def __init__(self, path=None):
-        self.config = ConfigParser()
-        self.path = path or os.path.expanduser(os.path.join('.bothub', 'config.ini'))
+        self.config = {}
+        self.path = path or os.path.expanduser(os.path.join('.bothub', 'config.yml'))
         parent_dir = os.path.dirname(self.path)
-        if not os.path.isdir(parent_dir):
+        if len(parent_dir) > 0 and not os.path.isdir(parent_dir):
             os.makedirs(parent_dir)
 
-        self.init_sections()
-
-    def init_sections(self):
-        if not self.config.has_section('default'):
-            self.config.add_section('default')
-
     def load(self):
-        self.config.read(self.path)
-        self.init_sections()
+        with open(self.path) as fin:
+            self.config = yaml.load(fin)
 
     def save(self):
-        with codecs.open(self.path, 'wb', encoding='utf8') as fp:
-            self.config.write(fp)
+        with codecs.open(self.path, 'wb', encoding='utf8') as fout:
+            content = yaml.dump(self.config)
+            fout.write(content)
 
-    def set(self, section, key, value):
-        self.config.set(section, key, value)
+    def set(self, key, value):
+        self.config[key] = value
 
-    def get(self, section, key):
-        return self.config.get(section, key)
+    def get(self, key):
+        return self.config.get(key)
+
+
+class ProjectConfig(Config):
+    def __init__(self, path='bothub.yml'):
+        super(ProjectConfig, self).__init__(path)

@@ -1,41 +1,27 @@
 # -*- coding: utf-8 -*-
 
 from bothub_cli.api import Api
-
-
-class MockTransport(object):
-    def __init__(self):
-        self.buf = []
-
-    def record(self, data):
-        self.buf.append(data)
-
-    def post(self, *args, **kwargs):
-        return self.buf.pop(0)
-
-    def get(self, *args, **kwargs):
-        return self.buf.pop(0)
-
-    def put(self, *args, **kwargs):
-        return self.buf.pop(0)
-
-
-class MockResponse(object):
-    def __init__(self, body, status_code=200):
-        self.body = body
-        self.status_code = status_code
-
-    def json(self):
-        return self.body
+from .testutils import MockResponse
+from .testutils import MockTransport
 
 
 def fixture_api():
     transport = MockTransport()
-    return transport, Api(transport=transport)
+    api = Api(transport=transport)
+    config = {'auth_token': 'testtoken'}
+    api.load_auth(config)
+    return transport, api
 
 
 def record_token(transport):
-    response = MockResponse({'data': {'access_token': 'testtoken'}})
+    data = {'data': {'access_token': 'testtoken'}}
+    response = MockResponse(data)
+    transport.record(response)
+
+
+def record_project(transport):
+    data = {'data': {'id': 1, 'name': 'testproject', 'short_name': 'testproject'}}
+    response = MockResponse(data)
     transport.record(response)
 
 
@@ -44,3 +30,11 @@ def test_authenticate_should_returns_token():
     record_token(transport)
     token = api.authenticate('testuser', 'testpw')
     assert token == 'testtoken'
+
+
+def test_create_project_should_returns_project():
+    transport, api = fixture_api()
+    record_project(transport)
+    project = api.create_project('testproject')
+    assert project['name'] == 'testproject'
+    assert project['id'] == 1

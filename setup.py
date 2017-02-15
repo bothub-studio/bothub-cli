@@ -22,6 +22,7 @@ setup(
         'six',
         'click',
         'requests',
+        'pyyaml',
     ],
     setup_requires=[
         'pytest-runner',

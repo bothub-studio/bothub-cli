@@ -13,3 +13,11 @@ class InvalidCredential(CliException):
 
 class NotFound(CliException):
     pass
+
+
+class NoCredential(CliException):
+    pass
+
+
+class Duplicated(CliException):
+    pass
