@@ -49,9 +49,8 @@ def init():
 @cli.command()
 def deploy():
     '''Deploy project'''
-    lib.package()
-    lib.upload()
-    click.echo('deploy')
+    lib.deploy()
+    click.secho('Deployed.', fg='green')
 
 
 def main():

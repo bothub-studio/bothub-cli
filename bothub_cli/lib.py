@@ -2,6 +2,8 @@
 
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
+import os
+
 from bothub_cli.api import Api
 from bothub_cli.config import Config
 from bothub_cli.config import ProjectConfig
@@ -36,9 +38,26 @@ def init(name, project_config=None, api=None, config=None):
     _project_config.save()
 
 
-def package():
-    return
+def get_content_from_file(path):
+    if os.path.isfile(path):
+        with open(path) as fin:
+            return fin.read()
 
 
-def upload():
-    return
+def deploy(project_config=None, api=None, config=None):
+    _api = api or API
+    _config = config or CONFIG
+    _project_config = project_config or PROJECT_CONFIG
+    _config.load()
+    _project_config.load()
+    _api.load_auth(_config)
+
+    dependency = get_content_from_file('requirements.txt') or ''
+    code = get_content_from_file('bothub.py') or ''
+
+    _api.upload_code(
+        _project_config.get('id'),
+        _project_config.get('programming-language'),
+        code,
+        dependency
+    )

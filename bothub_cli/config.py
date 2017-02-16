@@ -13,7 +13,7 @@ from six.moves.configparser import ConfigParser
 class Config(object):
     def __init__(self, path=None):
         self.config = {}
-        self.path = path or os.path.expanduser(os.path.join('.bothub', 'config.yml'))
+        self.path = path or os.path.expanduser(os.path.join('~', '.bothub', 'config.yml'))
         parent_dir = os.path.dirname(self.path)
         if len(parent_dir) > 0 and not os.path.isdir(parent_dir):
             os.makedirs(parent_dir)
@@ -24,7 +24,7 @@ class Config(object):
 
     def save(self):
         with codecs.open(self.path, 'wb', encoding='utf8') as fout:
-            content = yaml.dump(self.config)
+            content = yaml.dump(self.config, default_flow_style=False)
             fout.write(content)
 
     def set(self, key, value):

@@ -21,7 +21,7 @@ def record_token(transport):
 
 def record_project(transport):
     data = {'data': {'id': 1, 'name': 'testproject', 'short_name': 'testproject'}}
-    response = MockResponse(data)
+    response = MockResponse(data, status_code=201)
     transport.record(response)
 
 

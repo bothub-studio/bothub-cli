@@ -31,8 +31,8 @@ class Api(object):
             raise exc.NoCredential()
 
     def check_response(self, response):
-        if response.status_code / 100 in [2, 3]:
-            return ''
+        if response.status_code // 100 in [2, 3]:
+            return
 
         if response.status_code == 404:
             raise exc.NotFound(self.get_response_cause(response))
@@ -64,7 +64,7 @@ class Api(object):
 
     def create_project(self, name):
         url = self.gen_url('projects')
-        data = {'name': name}
+        data = {'name': name, 'short_name': name}
         headers = self.get_auth_headers()
         response = self.transport.post(url, data, headers=headers)
         self.check_response(response)
