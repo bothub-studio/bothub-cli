@@ -3,6 +3,7 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
 import os
+import tarfile
 
 from bothub_cli.api import Api
 from bothub_cli.config import Config
@@ -15,6 +16,19 @@ from bothub_cli.utils import read_content_from_file
 API = Api()
 CONFIG = Config()
 PROJECT_CONFIG = ProjectConfig()
+
+
+def create_py_project_structure():
+    safe_mkdir('src')
+    safe_mkdir('tests')
+    write_content_to_file(os.path.join('src', 'bot.py'), '')
+    write_content_to_file('requirements.txt', '')
+
+
+PROJECT_STRUCTURE_HANDLERS = {
+    'python3': create_py_project_structure,
+    'python': create_py_project_structure,
+}
 
 
 def authenticate(username, password, api=None, config=None):
@@ -39,14 +53,19 @@ def init(name, project_config=None, api=None, config=None):
     _project_config.set('name', project_name)
     _project_config.set('programming-language', programming_language)
     _project_config.save()
-    create_py_project_structure()
+    PROJECT_STRUCTURE_HANDLERS[programming_language]()
 
 
-def create_py_project_structure():
-    safe_mkdir('src')
-    safe_mkdir('tests')
-    write_content_to_file(os.path.join('src', 'bot.py'), '')
-    write_content_to_file('requirements.txt', '')
+def make_dist_package(dist_file_path):
+    if os.path.isfile(dist_file_path):
+        os.remove(dist_file_path)
+
+    with tarfile.open(dist_file_path, 'w:gz') as tout:
+        for fname in os.listdir('.'):
+            if os.path.isfile(fname):
+                tout.add(fname)
+            elif os.path.isdir(fname) and fname in ['src', 'tests']:
+                tout.add(fname)
 
 
 def deploy(project_config=None, api=None, config=None):
@@ -56,6 +75,10 @@ def deploy(project_config=None, api=None, config=None):
     _config.load()
     _project_config.load()
     _api.load_auth(_config)
+
+    safe_mkdir('dist')
+    dist_file_path = os.path.join('dist', 'bot.tgz')
+    make_dist_package(dist_file_path)
 
     dependency = read_content_from_file('requirements.txt') or ''
     code = read_content_from_file(os.path.join('src', 'bot.py')) or ''
