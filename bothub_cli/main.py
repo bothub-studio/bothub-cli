@@ -53,5 +53,26 @@ def deploy():
     click.secho('Deployed.', fg='green')
 
 
+@cli.command()
+def ls():
+    '''List projects'''
+    try:
+        projects = lib.ls()
+        for project in projects:
+            click.secho(project['name'], fg='green')
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@cli.command()
+@click.argument('name')
+def rm(name):
+    '''Delete a project'''
+    try:
+        lib.rm(name)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
 def main():
     cli()
