@@ -58,7 +58,7 @@ def deploy(project_config=None, api=None, config=None):
     _api.load_auth(_config)
 
     dependency = read_content_from_file('requirements.txt') or ''
-    code = read_content_from_file(os.path.join('src', 'bothub.py')) or ''
+    code = read_content_from_file(os.path.join('src', 'bot.py')) or ''
 
     _api.upload_code(
         _project_config.get('id'),
