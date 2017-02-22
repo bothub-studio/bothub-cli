@@ -19,7 +19,7 @@ class Api(object):
         self.auth_token = config.get('auth_token')
 
     def gen_url(self, *args):
-        return '{}/{}'.format(self.base_url, '/'.join(args))
+        return '{}/{}'.format(self.base_url, '/'.join([str(arg) for arg in args]))
 
     def get_response_cause(self, response):
         if response.json() == '':
@@ -71,9 +71,43 @@ class Api(object):
         return response.json()['data']
 
     def upload_code(self, project_id, language, code, dependency):
-        url = self.gen_url('projects', str(project_id), 'bot')
+        url = self.gen_url('projects', project_id, 'bot')
         data = {'language': language, 'code': code, 'dependency': dependency}
         headers = self.get_auth_headers()
         response = self.transport.put(url, data, headers=headers)
         self.check_response(response)
         return response.json()['data']
+
+    def list_projects(self):
+        url = self.gen_url('users', 'self', 'projects')
+        headers = self.get_auth_headers()
+        response = self.transport.get(url, headers=headers)
+        self.check_response(response)
+        return response.json()['data']
+
+    def delete_project(self, project_id):
+        url = self.gen_url('projects', project_id)
+        headers = self.get_auth_headers()
+        response = self.transport.delete(url, headers=headers)
+        self.check_response(response)
+
+    def add_project_channel(self, project_id, channel, api_key):
+        url = self.gen_url('projects', project_id, 'channels', channel)
+        data = {'api_key': api_key}
+        headers = self.get_auth_headers()
+        response = self.transport.put(url, data, headers=headers)
+        self.check_response(response)
+        return response.json()['data']
+
+    def get_project_channels(self, project_id):
+        url = self.gen_url('projects', project_id, 'channels')
+        headers = self.get_auth_headers()
+        response = self.transport.get(url, headers=headers)
+        self.check_response(response)
+        return response.json()['data']
+
+    def delete_project_channels(self, project_id, channel):
+        url = self.gen_url('projects', project_id, 'channels', channel)
+        headers = self.get_auth_headers()
+        response = self.transport.delete(url, headers=headers)
+        self.check_response(response)

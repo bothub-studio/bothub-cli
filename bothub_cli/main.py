@@ -74,5 +74,38 @@ def rm(name):
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 
+@cli.group()
+def channel():
+    pass
+
+
+@channel.command(name='add')
+@click.argument('channel')
+@click.argument('api_key')
+def add_channel(channel, api_key):
+    try:
+        lib.add_channel(channel, api_key)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@channel.command(name='ls')
+def ls_channel():
+    try:
+        channels = lib.ls_channel()
+        click.secho('\n'.join(channels), fg='green')
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@channel.command(name='rm')
+@click.argument('channel')
+def rm_channel(channel):
+    try:
+        lib.rm_channel(channel)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
 def main():
     cli()

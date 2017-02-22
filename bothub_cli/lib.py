@@ -85,3 +85,34 @@ def rm(name, api=None, config=None):
     _projects = [p for p in projects if p['name'] == name]
     for project in _projects:
         _api.delete_project(project['id'])
+
+
+def add_channel(channel, api_key, api=None, config=None, project_config=None):
+    _api = api or API
+    _config = config or CONFIG
+    _project_config = project_config or PROJECT_CONFIG
+    _config.load()
+    _project_config.load()
+    _api.load_auth(_config)
+    _api.add_project_channel(_project_config.get('id'), channel, api_key)
+
+
+def ls_channel(api=None, config=None, project_config=None):
+    _api = api or API
+    _config = config or CONFIG
+    _project_config = project_config or PROJECT_CONFIG
+    _config.load()
+    _project_config.load()
+    _api.load_auth(_config)
+    channels = _api.get_project_channels(_project_config.get('id'))
+    return [c['channel'] for c in channels]
+
+
+def rm_channel(channel, api=None, config=None, project_config=None):
+    _api = api or API
+    _config = config or CONFIG
+    _project_config = project_config or PROJECT_CONFIG
+    _config.load()
+    _project_config.load()
+    _api.load_auth(_config)
+    _api.delete_project_channels(_project_config.get('id'), channel)
