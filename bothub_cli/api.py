@@ -2,11 +2,12 @@
 
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
+import os
 import requests
 from bothub_cli import exceptions as exc
 
 
-BASE_URL = 'https://api.bothub.studio/api'
+BASE_URL = os.environ.get('BOTHUB_API_BASE_URL', 'https://api.bothub.studio/api')
 
 
 class Api(object):
@@ -72,9 +73,10 @@ class Api(object):
 
     def upload_code(self, project_id, language, code, dependency):
         url = self.gen_url('projects', project_id, 'bot')
-        data = {'language': language, 'code': code, 'dependency': dependency}
+        data = {'language': language, 'dependency': dependency}
+        files = {'code': code}
         headers = self.get_auth_headers()
-        response = self.transport.put(url, data, headers=headers)
+        response = self.transport.post(url, data, files=files, headers=headers)
         self.check_response(response)
         return response.json()['data']
 
