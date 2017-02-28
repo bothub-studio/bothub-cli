@@ -25,5 +25,5 @@ class Bot(BaseBot):
     """
 
     def handle_message(self, event, context):
-        raise NotImplementederror()
+        raise NotImplementedError()
 '''
