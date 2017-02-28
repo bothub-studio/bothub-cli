@@ -25,5 +25,20 @@ class Bot(BaseBot):
     """
 
     def handle_message(self, event, context):
-        raise NotImplementedError()
+        """I have two arguments.
+
+        event is a dict and contains trigger info.
+
+        {
+           "trigger": "webhook",
+           "channel": "<name>",
+           "sender": {
+              "id": "<chat_id>",
+              "name": "<nickname>"
+           },
+           "content": "<message content>",
+           "raw_data": <data itself webhook receives>
+        }
+        """
+        self.send_message('Echo: {}'.format(event['content']))
 '''
