@@ -11,6 +11,7 @@ from bothub_cli.config import ProjectConfig
 from bothub_cli.utils import safe_mkdir
 from bothub_cli.utils import write_content_to_file
 from bothub_cli.utils import read_content_from_file
+from bothub_cli.template import code as bot_code
 
 
 API = Api()
@@ -19,9 +20,10 @@ PROJECT_CONFIG = ProjectConfig()
 
 
 def create_py_project_structure():
-    safe_mkdir('src')
+    safe_mkdir('bothub')
     safe_mkdir('tests')
-    write_content_to_file(os.path.join('src', 'bot.py'), '')
+    write_content_to_file(os.path.join('bothub', '__init__.py'), '')
+    write_content_to_file(os.path.join('bothub', 'bot.py'), bot_code)
     write_content_to_file('requirements.txt', '')
 
 
@@ -64,7 +66,7 @@ def make_dist_package(dist_file_path):
         for fname in os.listdir('.'):
             if os.path.isfile(fname):
                 tout.add(fname)
-            elif os.path.isdir(fname) and fname in ['src', 'tests']:
+            elif os.path.isdir(fname) and fname in ['bothub', 'tests']:
                 tout.add(fname)
 
 
@@ -80,15 +82,15 @@ def deploy(project_config=None, api=None, config=None):
     dist_file_path = os.path.join('dist', 'bot.tgz')
     make_dist_package(dist_file_path)
 
-    dependency = read_content_from_file('requirements.txt') or ''
-    code = read_content_from_file(os.path.join('src', 'bot.py')) or ''
+    with open(dist_file_path, 'rb') as dist_file:
+        dependency = read_content_from_file('requirements.txt') or ''
 
-    _api.upload_code(
-        _project_config.get('id'),
-        _project_config.get('programming-language'),
-        code,
-        dependency
-    )
+        _api.upload_code(
+            _project_config.get('id'),
+            _project_config.get('programming-language'),
+            dist_file,
+            dependency
+        )
 
 
 def ls(api=None, config=None):
