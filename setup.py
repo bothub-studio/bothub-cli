@@ -8,11 +8,18 @@ except ImportError:
     use_setuptools()
     from setuptools import setup
 
+from os import path
+
+HERE = path.abspath(path.dirname(__file__))
+
+with open(path.join(HERE, 'README.rst'), encoding='utf-8') as f:
+    LONG_DESCRIPTION = f.read()
 
 setup(
     name='bothub-cli',
     version='0.1.0',
     description=u'A CLI tool for BotHub.studio service',
+    long_description=LONG_DESCRIPTION,
     author='Jeongsoo Park',
     author_email='toracle@gmail.com',
     url='https://github.com/bothub-studio/bothub-cli',
