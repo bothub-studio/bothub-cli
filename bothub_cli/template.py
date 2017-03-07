@@ -25,7 +25,7 @@ class Bot(BaseBot):
     """
 
     def handle_message(self, event, context):
-        """I have two arguments.
+        """Handle a message received
 
         event is a dict and contains trigger info.
 
@@ -37,7 +37,7 @@ class Bot(BaseBot):
               "name": "<nickname>"
            },
            "content": "<message content>",
-           "raw_data": <data itself webhook receives>
+           "raw_data": <unmodified data itself webhook received>
         }
         """
         self.send_message('Echo: {}'.format(event['content']))
