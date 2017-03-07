@@ -18,13 +18,15 @@ with open(path.join(HERE, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='bothub-cli',
     version='0.1.0',
-    description=u'A CLI tool for BotHub.studio service',
+    description='A CLI tool for bothub.studio service',
     long_description=LONG_DESCRIPTION,
     author='Jeongsoo Park',
     author_email='toracle@gmail.com',
     url='https://github.com/bothub-studio/bothub-cli',
     license="Apache 2.0",
-    packages=find_packages(),
+    packages=[
+        'bothub_cli'
+    ],
     include_package_data=True,
     install_requires=[
         'six',
