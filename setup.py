@@ -58,5 +58,5 @@ setup(
         'Topic :: Software Development :: Libraries :: Application Frameworks',
         'Topic :: Utilities'
     ],
-    keywords='serverless chatbot framework',
+    keywords='bothub serverless chatbot framework cli',
 )
