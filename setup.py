@@ -11,7 +11,7 @@ except ImportError:
 
 setup(
     name='bothub-cli',
-    version='0.0.1',
+    version='0.1.0',
     description=u'',
     author='Jeongsoo Park',
     author_email='toracle@gmail.com',
@@ -39,7 +39,7 @@ setup(
         ]
     },
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
