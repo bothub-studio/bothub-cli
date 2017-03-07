@@ -1,0 +1,5 @@
+include LICENSE
+recursive-include bothub_cli *.py
+recursive-exclude bothub
+global-exclude __pycache__
+global-exclude *.py[co]
