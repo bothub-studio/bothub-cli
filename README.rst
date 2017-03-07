@@ -82,35 +82,35 @@ Usage
 Setup
 -----
 
-bothub configure
+$ bothub configure
   Authorize a user and get access token.
 
 
 Project management
 ------------------
 
-bothub init
+$ bothub init
   Initialize project on current directory. Create a echo chatbot code.
 
-bothub deploy
+$ bothub deploy
   Deploy current project.
 
-bothub ls
+$ bothub ls
   List of projects.
 
-bothub rm <project_name>
+$ bothub rm <project_name>
   Delete a project.
 
 Channel management
 ------------------
 
-bothub channel ls
+$ bothub channel ls
   List of channels for current project.
 
-bothub channel add <channel> <api_key>
+$ bothub channel add <channel> <api_key>
   Add a channel for current project.
 
-bothub channel rm <channel>
+$ bothub channel rm <channel>
   Remove a channel from current project.
 
 
