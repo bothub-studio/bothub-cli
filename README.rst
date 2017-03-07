@@ -5,7 +5,7 @@ bothub-cli
 CLI tool for deploy chatbot
 ---------------------------
 
-This package provides command line interface to BotHub.studio service.
+This package provides command line interface to `BotHub.studio <https://bothub.studio>`__ service.
 
 Installation
 ============
@@ -24,13 +24,13 @@ The bothub-cli package works on python2 and 3 both.
 Getting Started
 ===============
 
-Before using bothub-cli, you need to tell it about your `BotHub.studio <https://bothub.studio>` credentials::
+Before using bothub-cli, you need to tell it about your `BotHub.studio <https://bothub.studio>`__ credentials::
 
   $ bothub configure
   Username: myuser
   Password: mysecret
 
-Then it stores access token on ~/.bothub directory.
+Then it stores access token on ``~/.bothub`` directory.
 
 To start build your new bot::
 
@@ -56,3 +56,65 @@ and deploy it::
 You also need to configure channel to use::
 
   $ bothub channel add telegram <my-api-key>
+
+Usage
+=====
+
+::
+
+   Usage: bothub [OPTIONS] COMMAND [ARGS]...
+
+   Bothub is a command line tool that configure, init, and deploy bot codes
+   to BotHub.Studio service
+
+   Options:
+     --help  Show this message and exit.
+
+   Commands:
+     channel    Setup channels of current project
+     configure  Setup credentials
+     deploy     Deploy project
+     init       Initialize project
+     ls         List projects
+     rm         Delete a project
+
+
+Setup
+-----
+
+bothub configure
+  Authorize a user and get access token.
+
+
+Project management
+------------------
+
+bothub init
+  Initialize project on current directory. Create a echo chatbot code.
+
+bothub deploy
+  Deploy current project.
+
+bothub ls
+  List of projects.
+
+bothub rm <project_name>
+  Delete a project.
+
+Channel management
+------------------
+
+bothub channel ls
+  List of channels for current project.
+
+bothub channel add <channel> <api_key>
+  Add a channel for current project.
+
+bothub channel rm <channel>
+  Remove a channel from current project.
+
+
+License
+=======
+
+Apache License 2.0
