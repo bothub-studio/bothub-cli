@@ -82,36 +82,44 @@ Usage
 Setup
 -----
 
-$ bothub configure
-  Authorize a user and get access token.
+Authorize a user and get access token.::
+
+  $ bothub configure
 
 
 Project management
 ------------------
 
-$ bothub init
-  Initialize project on current directory. Create a echo chatbot code.
+Initialize project on current directory. Create a echo chatbot code.::
 
-$ bothub deploy
-  Deploy current project.
+  $ bothub init
 
-$ bothub ls
-  List of projects.
+Deploy current project.::
 
-$ bothub rm <project_name>
-  Delete a project.
+  $ bothub deploy
+
+List of projects.::
+
+  $ bothub ls
+
+Delete a project.::
+
+  $ bothub rm <project_name>
 
 Channel management
 ------------------
 
-$ bothub channel ls
-  List of channels for current project.
+List of channels for current project.::
 
-$ bothub channel add <channel> <api_key>
-  Add a channel for current project.
+  $ bothub channel ls
 
-$ bothub channel rm <channel>
-  Remove a channel from current project.
+Add a channel for current project.::
+
+  $ bothub channel add <channel> <api_key>
+
+Remove a channel from current project.::
+
+  $ bothub channel rm <channel>
 
 
 License
