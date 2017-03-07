@@ -5,7 +5,7 @@ bothub-cli
 CLI tool for deploy chatbot
 ---------------------------
 
-This package provides command line interface to `BotHub.studio`_ service.
+This package provides command line interface to `Bothub.studio`_ service.
 
 Installation
 ============
@@ -24,7 +24,7 @@ The bothub-cli package works on python2 and 3 both.
 Getting Started
 ===============
 
-Before using bothub-cli, you need to tell it about your `BotHub.studio`_ credentials.
+Before using bothub-cli, you need to tell it about your `Bothub.studio`_ credentials.
 
 .. code:: bash
 
@@ -188,4 +188,4 @@ License
 
 Apache License 2.0
 
-.. _BotHub.studio: https://bothub.studio
+.. _Bothub.studio: https://bothub.studio
