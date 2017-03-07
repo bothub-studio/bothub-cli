@@ -26,7 +26,7 @@ Getting Started
 
 Before using bothub-cli, you need to tell it about your `BotHub.studio`_ credentials.
 
-.. code: bash
+.. code:: bash
 
    $ bothub configure
    Username: myuser
@@ -36,7 +36,7 @@ Then it stores access token on ``~/.bothub`` directory.
 
 To start build a new bot:
 
-.. code: bash
+.. code:: bash
 
    $ mkdir mybot
    $ cd mybot
@@ -55,12 +55,12 @@ Now you have a starter echo bot::
 
 and deploy it.
 
-.. code: bash
+.. code:: bash
    $ bothub deploy
 
 You also need to configure channel to use.
 
-.. code: bash
+.. code:: bash
    $ bothub channel add telegram <my-api-key>
 
 Usage
@@ -90,7 +90,7 @@ Setup
 
 Authorize a user and get access token.
 
-.. code: bash
+.. code:: bash
 
    $ bothub configure
 
@@ -100,25 +100,25 @@ Project management
 
 Initialize project on current directory. Create a echo chatbot code.
 
-.. code: bash
+.. code:: bash
 
    $ bothub init
 
 Deploy current project.
 
-.. code: bash
+.. code:: bash
 
    $ bothub deploy
 
 List of projects.
 
-.. code: bash
+.. code:: bash
 
    $ bothub ls
 
 Delete a project.
 
-.. code: bash
+.. code:: bash
 
    $ bothub rm <project_name>
 
@@ -127,19 +127,19 @@ Channel management
 
 List of channels for current project.
 
-.. code: bash
+.. code:: bash
 
    $ bothub channel ls
 
 Add a channel for current project.
 
-.. code: bash
+.. code:: bash
 
    $ bothub channel add <channel> <api_key>
 
 Remove a channel from current project.
 
-.. code: bash
+.. code:: bash
 
    $ bothub channel rm <channel>
 
