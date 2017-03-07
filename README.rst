@@ -5,7 +5,7 @@ bothub-cli
 CLI tool for deploy chatbot
 ---------------------------
 
-This package provides command line interface to `BotHub.studio <https://bothub.studio>`__ service.
+This package provides command line interface to `BotHub.studio`_ service.
 
 Installation
 ============
@@ -24,20 +24,24 @@ The bothub-cli package works on python2 and 3 both.
 Getting Started
 ===============
 
-Before using bothub-cli, you need to tell it about your `BotHub.studio <https://bothub.studio>`__ credentials::
+Before using bothub-cli, you need to tell it about your `BotHub.studio`_ credentials.
 
-  $ bothub configure
-  Username: myuser
-  Password: mysecret
+.. code: bash
+
+   $ bothub configure
+   Username: myuser
+   Password: mysecret
 
 Then it stores access token on ``~/.bothub`` directory.
 
-To start build your new bot::
+To start build a new bot:
 
-  $ mkdir mybot
-  $ cd mybot
-  $ bothub init
-  Project name: mybot
+.. code: bash
+
+   $ mkdir mybot
+   $ cd mybot
+   $ bothub init
+   Project name: mybot
 
 Now you have a starter echo bot::
 
@@ -49,13 +53,15 @@ Now you have a starter echo bot::
   |-- requirements.txt
   `-- tests
 
-and deploy it::
+and deploy it.
 
-  $ bothub deploy
+.. code: bash
+   $ bothub deploy
 
-You also need to configure channel to use::
+You also need to configure channel to use.
 
-  $ bothub channel add telegram <my-api-key>
+.. code: bash
+   $ bothub channel add telegram <my-api-key>
 
 Usage
 =====
@@ -82,47 +88,71 @@ Usage
 Setup
 -----
 
-Authorize a user and get access token.::
+Authorize a user and get access token.
 
-  $ bothub configure
+.. code: bash
+
+   $ bothub configure
 
 
 Project management
 ------------------
 
-Initialize project on current directory. Create a echo chatbot code.::
+Initialize project on current directory. Create a echo chatbot code.
 
-  $ bothub init
+.. code: bash
 
-Deploy current project.::
+   $ bothub init
 
-  $ bothub deploy
+Deploy current project.
 
-List of projects.::
+.. code: bash
 
-  $ bothub ls
+   $ bothub deploy
 
-Delete a project.::
+List of projects.
 
-  $ bothub rm <project_name>
+.. code: bash
+
+   $ bothub ls
+
+Delete a project.
+
+.. code: bash
+
+   $ bothub rm <project_name>
 
 Channel management
 ------------------
 
-List of channels for current project.::
+List of channels for current project.
 
-  $ bothub channel ls
+.. code: bash
 
-Add a channel for current project.::
+   $ bothub channel ls
 
-  $ bothub channel add <channel> <api_key>
+Add a channel for current project.
 
-Remove a channel from current project.::
+.. code: bash
 
-  $ bothub channel rm <channel>
+   $ bothub channel add <channel> <api_key>
+
+Remove a channel from current project.
+
+.. code: bash
+
+   $ bothub channel rm <channel>
+
+
+Resources
+=========
+
+* Documentation (TBD)
 
 
 License
 =======
 
 Apache License 2.0
+
+.. _BotHub.studio: https://bothub.studio
