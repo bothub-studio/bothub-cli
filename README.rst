@@ -87,11 +87,13 @@ Edit bot.py below for your purpose.
 and deploy it.
 
 .. code:: bash
+
    $ bothub deploy
 
 You also need to configure channel to use.
 
 .. code:: bash
+
    $ bothub channel add telegram <my-api-key>
 
 Usage
