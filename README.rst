@@ -5,7 +5,7 @@ bothub-cli
 CLI tool for deploy chatbot
 ---------------------------
 
-This package provides command line interface to `BotHub.studio <https://bothub.studio>`__ service.
+This package provides command line interface to `Bothub.studio`_ service.
 
 Installation
 ============
@@ -24,20 +24,24 @@ The bothub-cli package works on python2 and 3 both.
 Getting Started
 ===============
 
-Before using bothub-cli, you need to tell it about your `BotHub.studio <https://bothub.studio>`__ credentials::
+Before using bothub-cli, you need to tell it about your `Bothub.studio`_ credentials.
 
-  $ bothub configure
-  Username: myuser
-  Password: mysecret
+.. code:: bash
+
+   $ bothub configure
+   Username: myuser
+   Password: mysecret
 
 Then it stores access token on ``~/.bothub`` directory.
 
-To start build your new bot::
+To start build a new bot:
 
-  $ mkdir mybot
-  $ cd mybot
-  $ bothub init
-  Project name: mybot
+.. code:: bash
+
+   $ mkdir mybot
+   $ cd mybot
+   $ bothub init
+   Project name: mybot
 
 Now you have a starter echo bot::
 
@@ -49,13 +53,48 @@ Now you have a starter echo bot::
   |-- requirements.txt
   `-- tests
 
-and deploy it::
+Edit bot.py below for your purpose.
 
-  $ bothub deploy
+.. code:: python
 
-You also need to configure channel to use::
+   # -*- coding: utf-8 -*-
+   
+   from __future__ import (absolute_import, division, print_function, unicode_literals)
+   
+   from bothub_client.bot import BaseBot
+   
+   
+   class Bot(BaseBot):
+       """Represent a Bot logic which interacts with a user.
+   
+       BaseBot superclass have methods belows:
+   
+       * Send message
+         * self.send_message(message, user_id=None, channel=None)
+       * Data Storage
+         * self.set_project_data(data)
+         * self.get_project_data()
+         * self.set_user_data(data, user_id=None, channel=None)
+         * self.get_user_data(user_id=None, channel=None)
+   
+       When you omit user_id and channel argument, it regarded as a user
+       who triggered a bot.
+       """
+   
+       def handle_message(self, event, context):
+           self.send_message(event['content'])
 
-  $ bothub channel add telegram <my-api-key>
+and deploy it.
+
+.. code:: bash
+
+   $ bothub deploy
+
+You also need to configure channel to use.
+
+.. code:: bash
+
+   $ bothub channel add telegram <my-api-key>
 
 Usage
 =====
@@ -82,39 +121,71 @@ Usage
 Setup
 -----
 
-$ bothub configure
-  Authorize a user and get access token.
+Authorize a user and get access token.
+
+.. code:: bash
+
+   $ bothub configure
 
 
 Project management
 ------------------
 
-$ bothub init
-  Initialize project on current directory. Create a echo chatbot code.
+Initialize project on current directory. Create a echo chatbot code.
 
-$ bothub deploy
-  Deploy current project.
+.. code:: bash
 
-$ bothub ls
-  List of projects.
+   $ bothub init
 
-$ bothub rm <project_name>
-  Delete a project.
+Deploy current project.
+
+.. code:: bash
+
+   $ bothub deploy
+
+List of projects.
+
+.. code:: bash
+
+   $ bothub ls
+
+Delete a project.
+
+.. code:: bash
+
+   $ bothub rm <project_name>
 
 Channel management
 ------------------
 
-$ bothub channel ls
-  List of channels for current project.
+List of channels for current project.
 
-$ bothub channel add <channel> <api_key>
-  Add a channel for current project.
+.. code:: bash
 
-$ bothub channel rm <channel>
-  Remove a channel from current project.
+   $ bothub channel ls
+
+Add a channel for current project.
+
+.. code:: bash
+
+   $ bothub channel add <channel> <api_key>
+
+Remove a channel from current project.
+
+.. code:: bash
+
+   $ bothub channel rm <channel>
+
+
+Resources
+=========
+
+* Documentation (TBD)
 
 
 License
 =======
 
 Apache License 2.0
+
+.. _Bothub.studio: https://bothub.studio
