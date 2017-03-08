@@ -76,6 +76,7 @@ def rm(name):
 
 @cli.group()
 def channel():
+    '''Setup channels of current project'''
     pass
 
 
@@ -83,6 +84,7 @@ def channel():
 @click.argument('channel')
 @click.argument('api_key')
 def add_channel(channel, api_key):
+    '''Add a new channel to current project'''
     try:
         lib.add_channel(channel, api_key)
     except exc.CliException as ex:
@@ -91,6 +93,7 @@ def add_channel(channel, api_key):
 
 @channel.command(name='ls')
 def ls_channel():
+    '''List channels of current project'''
     try:
         channels = lib.ls_channel()
         click.secho('\n'.join(channels), fg='green')
@@ -101,6 +104,7 @@ def ls_channel():
 @channel.command(name='rm')
 @click.argument('channel')
 def rm_channel(channel):
+    '''Remove a channel from current project'''
     try:
         lib.rm_channel(channel)
     except exc.CliException as ex:
