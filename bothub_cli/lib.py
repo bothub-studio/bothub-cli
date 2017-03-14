@@ -141,3 +141,24 @@ def rm_channel(channel, api=None, config=None, project_config=None):
     _project_config.load()
     _api.load_auth(_config)
     _api.delete_project_channels(_project_config.get('id'), channel)
+
+
+def get_properties(key, api=None, config=None, project_config=None):
+    _api = api or API
+    _config = config or CONFIG
+    _project_config = project_config or PROJECT_CONFIG
+    _config.load()
+    _project_config.load()
+    _api.load_auth(_config)
+    data = _api.get_project_property(_project_config.get('id'))
+    return data.get(key)
+
+
+def set_properties(key, value, api=None, config=None, project_config=None):
+    _api = api or API
+    _config = config or CONFIG
+    _project_config = project_config or PROJECT_CONFIG
+    _config.load()
+    _project_config.load()
+    _api.load_auth(_config)
+    return _api.set_project_property(_project_config.get('id'), key, value)

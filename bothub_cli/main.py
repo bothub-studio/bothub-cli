@@ -111,5 +111,42 @@ def rm_channel(channel):
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 
+@cli.group()
+def property():
+    '''Manage project properties'''
+    pass
+
+
+def print_properties(d):
+    width = max([len(k) for k in d.keys()])
+    for key, val in d.items():
+        click.echo('{0: <{2}}: {1}'.format(key, val, width + 3))
+
+
+@property.command(name='get')
+@click.argument('key')
+def get_property(key):
+    '''Get value of a property'''
+    try:
+        result = lib.get_properties(key)
+        if isinstance(result, dict):
+            print_properties(result)
+        else:
+            click.echo('{}: {}'.format(key, result))
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@property.command(name='set')
+@click.argument('key')
+@click.argument('value')
+def set_property(key, value):
+    '''Set value of a property'''
+    try:
+        lib.set_properties(key, value)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
 def main():
     cli()

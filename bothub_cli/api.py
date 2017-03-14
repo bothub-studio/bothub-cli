@@ -113,3 +113,18 @@ class Api(object):
         headers = self.get_auth_headers()
         response = self.transport.delete(url, headers=headers)
         self.check_response(response)
+
+    def set_project_property(self, project_id, key, value):
+        url = self.gen_url('projects', project_id, 'properties')
+        headers = self.get_auth_headers()
+        data = {key: value}
+        response = self.transport.post(url, json={'data': data}, headers=headers)
+        self.check_response(response)
+        return response.json()['data']
+
+    def get_project_property(self, project_id):
+        url = self.gen_url('projects', project_id, 'properties')
+        headers = self.get_auth_headers()
+        response = self.transport.get(url, headers=headers)
+        self.check_response(response)
+        return response.json()['data']
