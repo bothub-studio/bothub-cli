@@ -67,7 +67,7 @@ class Api(object):
         url = self.gen_url('projects')
         data = {'name': name, 'short_name': name}
         headers = self.get_auth_headers()
-        response = self.transport.post(url, data, headers=headers)
+        response = self.transport.post(url, json=data, headers=headers)
         self.check_response(response)
         return response.json()['data']
 
@@ -76,7 +76,7 @@ class Api(object):
         data = {'language': language, 'dependency': dependency}
         files = {'code': code}
         headers = self.get_auth_headers()
-        response = self.transport.post(url, data, files=files, headers=headers)
+        response = self.transport.post(url, json=data, files=files, headers=headers)
         self.check_response(response)
         return response.json()['data']
 
@@ -93,11 +93,11 @@ class Api(object):
         response = self.transport.delete(url, headers=headers)
         self.check_response(response)
 
-    def add_project_channel(self, project_id, channel, api_key):
+    def add_project_channel(self, project_id, channel, credentials):
         url = self.gen_url('projects', project_id, 'channels', channel)
-        data = {'api_key': api_key}
+        data = {'credentials': credentials}
         headers = self.get_auth_headers()
-        response = self.transport.put(url, data, headers=headers)
+        response = self.transport.post(url, json=data, headers=headers)
         self.check_response(response)
         return response.json()['data']
 

@@ -168,7 +168,7 @@ Add a channel for current project.
 
 .. code:: bash
 
-   $ bothub channel add <channel> <api_key>
+   $ bothub channel add <channel> --api-key=<api_key> --app-id=<app_id>
 
 Remove a channel from current project.
 

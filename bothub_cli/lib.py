@@ -112,14 +112,14 @@ def rm(name, api=None, config=None):
         _api.delete_project(project['id'])
 
 
-def add_channel(channel, api_key, api=None, config=None, project_config=None):
+def add_channel(channel, credentials, api=None, config=None, project_config=None):
     _api = api or API
     _config = config or CONFIG
     _project_config = project_config or PROJECT_CONFIG
     _config.load()
     _project_config.load()
     _api.load_auth(_config)
-    _api.add_project_channel(_project_config.get('id'), channel, api_key)
+    _api.add_project_channel(_project_config.get('id'), channel, credentials)
 
 
 def ls_channel(api=None, config=None, project_config=None):
