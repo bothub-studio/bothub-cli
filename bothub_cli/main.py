@@ -89,12 +89,14 @@ def add_option_to_dict(d, option_name, option):
 @click.argument('channel')
 @click.option('--api-key')
 @click.option('--app-id')
-def add_channel(channel, api_key, app_id):
+@click.option('--app-secret')
+def add_channel(channel, api_key, app_id, app_secret):
     '''Add a new channel to current project'''
     try:
         credentials = {}
         add_option_to_dict(credentials, 'api_key', api_key)
         add_option_to_dict(credentials, 'app_id', app_id)
+        add_option_to_dict(credentials, 'app_secret', app_secret)
         lib.add_channel(channel, credentials)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
