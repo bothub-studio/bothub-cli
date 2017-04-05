@@ -76,7 +76,7 @@ class Api(object):
         data = {'language': language, 'dependency': dependency}
         files = {'code': code}
         headers = self.get_auth_headers()
-        response = self.transport.post(url, json=data, files=files, headers=headers)
+        response = self.transport.post(url, data=data, files=files, headers=headers)
         self.check_response(response)
         return response.json()['data']
 
