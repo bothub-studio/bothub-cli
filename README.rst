@@ -94,7 +94,7 @@ You also need to configure channel to use.
 
 .. code:: bash
 
-   $ bothub channel add telegram <my-api-key>
+   $ bothub channel add telegram --api-key=<my-api-key>
 
 Usage
 =====
