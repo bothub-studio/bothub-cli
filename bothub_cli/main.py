@@ -103,11 +103,21 @@ def add_channel(channel, api_key, app_id, app_secret):
 
 
 @channel.command(name='ls')
-def ls_channel():
+@click.option('-l', '--long', count=True)
+def ls_channel(long=False):
     '''List channels of current project'''
     try:
-        channels = lib.ls_channel()
-        click.secho('\n'.join(channels), fg='green')
+        channels = lib.ls_channel(long)
+        tab_size = 8 if long else 0
+        max_width = max([len(line) for line in channels]) + tab_size
+
+        if long:
+            click.secho('{: <8}\t{}'.format('channel', 'credentials'))
+        else:
+            click.secho('{: <8}'.format('channel'))
+
+        click.secho('-'*max_width)
+        click.secho('\n'.join(channels))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 

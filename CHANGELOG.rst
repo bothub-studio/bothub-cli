@@ -1,3 +1,9 @@
+0.1.3
+-----
+
+* add long option (-l) to channel subcommand
+
+
 0.1.2
 -----
 

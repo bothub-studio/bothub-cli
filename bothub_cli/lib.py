@@ -122,7 +122,7 @@ def add_channel(channel, credentials, api=None, config=None, project_config=None
     _api.add_project_channel(_project_config.get('id'), channel, credentials)
 
 
-def ls_channel(api=None, config=None, project_config=None):
+def ls_channel(verbose=False, api=None, config=None, project_config=None):
     _api = api or API
     _config = config or CONFIG
     _project_config = project_config or PROJECT_CONFIG
@@ -130,7 +130,11 @@ def ls_channel(api=None, config=None, project_config=None):
     _project_config.load()
     _api.load_auth(_config)
     channels = _api.get_project_channels(_project_config.get('id'))
-    return [c['channel'] for c in channels]
+    if verbose:
+        result = ['{}\t{}'.format(c['channel'], c['credentials']) for c in channels]
+    else:
+        result = [c['channel'] for c in channels]
+    return result
 
 
 def rm_channel(channel, api=None, config=None, project_config=None):
