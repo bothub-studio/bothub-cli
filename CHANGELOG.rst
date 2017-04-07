@@ -2,6 +2,7 @@
 -----
 
 * add long option (-l) to channel subcommand
+* use terminaltables and apply it to channel and project ls
 
 
 0.1.2

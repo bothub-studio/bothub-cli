@@ -98,7 +98,7 @@ def ls(api=None, config=None):
     _config = config or CONFIG
     _config.load()
     _api.load_auth(_config)
-    return _api.list_projects()
+    return [[p['name']] for p in _api.list_projects()]
 
 
 def rm(name, api=None, config=None):
@@ -131,9 +131,9 @@ def ls_channel(verbose=False, api=None, config=None, project_config=None):
     _api.load_auth(_config)
     channels = _api.get_project_channels(_project_config.get('id'))
     if verbose:
-        result = ['{}\t{}'.format(c['channel'], c['credentials']) for c in channels]
+        result = [[c['channel'], c['credentials']] for c in channels]
     else:
-        result = [c['channel'] for c in channels]
+        result = [[c['channel']] for c in channels]
     return result
 
 

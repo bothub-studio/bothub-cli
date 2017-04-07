@@ -4,6 +4,8 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 import os
 import click
+from terminaltables import AsciiTable as Table
+
 from bothub_cli import lib
 from bothub_cli import exceptions as exc
 
@@ -58,8 +60,10 @@ def ls():
     '''List projects'''
     try:
         projects = lib.ls()
-        for project in projects:
-            click.secho(project['name'], fg='green')
+        header = ['project']
+        data = [header] + projects
+        table = Table(data)
+        click.secho(table.table)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -108,16 +112,12 @@ def ls_channel(long=False):
     '''List channels of current project'''
     try:
         channels = lib.ls_channel(long)
-        tab_size = 8 if long else 0
-        max_width = max([len(line) for line in channels]) + tab_size
-
+        header = ['channel']
         if long:
-            click.secho('{: <8}\t{}'.format('channel', 'credentials'))
-        else:
-            click.secho('{: <8}'.format('channel'))
-
-        click.secho('-'*max_width)
-        click.secho('\n'.join(channels))
+            header.append('credentials')
+        data = [header] + channels
+        table = Table(data)
+        click.secho(table.table)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 

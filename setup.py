@@ -33,6 +33,7 @@ setup(
         'click',
         'requests',
         'pyyaml',
+        'terminaltables'
     ],
     setup_requires=[
         'pytest-runner',
