@@ -17,7 +17,7 @@ with open(path.join(HERE, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='bothub-cli',
-    version='0.1.0',
+    version='0.1.1',
     description='A CLI tool for bothub.studio service',
     long_description=LONG_DESCRIPTION,
     author='Jeongsoo Park',
