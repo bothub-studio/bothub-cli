@@ -1,8 +1,9 @@
 0.1.3
 -----
 
-* add long option (-l) to channel subcommand
+* add long option (-l) to channel ls subcommand
 * use terminaltables and apply it to channel and project ls
+* add page-access-token option
 
 
 0.1.2
