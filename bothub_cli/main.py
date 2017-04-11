@@ -77,6 +77,8 @@ def rm(name):
         lib.rm(name)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+    except ValueError as err:
+        click.secho('{}'.format(err), fg='red')
 
 
 @cli.group()
