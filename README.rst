@@ -168,7 +168,8 @@ Add a channel for current project.
 
 .. code:: bash
 
-   $ bothub channel add <channel> --api-key=<api_key> --app-id=<app_id>
+   $ bothub channel add telegram --api-key=<api_key>
+   $ bothub channel add facebook --app-id=<app_id> --app-secret=<app_secret> --page-access-token=<page_access_token>
 
 Remove a channel from current project.
 

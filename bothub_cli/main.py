@@ -4,6 +4,8 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 import os
 import click
+from terminaltables import AsciiTable as Table
+
 from bothub_cli import lib
 from bothub_cli import exceptions as exc
 
@@ -44,6 +46,7 @@ def init():
             break
         except exc.CliException as ex:
             click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+            break
 
 
 @cli.command()
@@ -58,8 +61,10 @@ def ls():
     '''List projects'''
     try:
         projects = lib.ls()
-        for project in projects:
-            click.secho(project['name'], fg='green')
+        header = ['project']
+        data = [header] + projects
+        table = Table(data)
+        click.secho(table.table)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -90,24 +95,32 @@ def add_option_to_dict(d, option_name, option):
 @click.option('--api-key')
 @click.option('--app-id')
 @click.option('--app-secret')
-def add_channel(channel, api_key, app_id, app_secret):
+@click.option('--page-access-token')
+def add_channel(channel, api_key, app_id, app_secret, page_access_token):
     '''Add a new channel to current project'''
     try:
         credentials = {}
         add_option_to_dict(credentials, 'api_key', api_key)
         add_option_to_dict(credentials, 'app_id', app_id)
         add_option_to_dict(credentials, 'app_secret', app_secret)
+        add_option_to_dict(credentials, 'page_access_token', page_access_token)
         lib.add_channel(channel, credentials)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 
 @channel.command(name='ls')
-def ls_channel():
+@click.option('-l', '--long', count=True)
+def ls_channel(long=False):
     '''List channels of current project'''
     try:
-        channels = lib.ls_channel()
-        click.secho('\n'.join(channels), fg='green')
+        channels = lib.ls_channel(long)
+        header = ['channel']
+        if long:
+            header.append('credentials')
+        data = [header] + channels
+        table = Table(data)
+        click.secho(table.table)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
