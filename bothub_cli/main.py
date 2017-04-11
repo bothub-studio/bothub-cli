@@ -46,6 +46,7 @@ def init():
             break
         except exc.CliException as ex:
             click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+            break
 
 
 @cli.command()
