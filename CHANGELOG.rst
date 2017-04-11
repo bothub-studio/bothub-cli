@@ -4,6 +4,7 @@
 * add long option (-l) to channel ls subcommand
 * use terminaltables and apply it to channel and project ls
 * add page-access-token option
+* fix inifinite loop bug when configure on existing project
 
 
 0.1.2
