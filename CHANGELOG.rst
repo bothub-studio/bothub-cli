@@ -2,6 +2,7 @@
 -----
 
 * add a ``bothub`` package dependency
+* change an error message
 
 
 0.1.3
