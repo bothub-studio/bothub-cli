@@ -24,7 +24,7 @@ def create_py_project_structure():
     safe_mkdir('tests')
     write_content_to_file(os.path.join('bothub', '__init__.py'), '')
     write_content_to_file(os.path.join('bothub', 'bot.py'), bot_code)
-    write_content_to_file('requirements.txt', '')
+    write_content_to_file('requirements.txt', 'bothub')
 
 
 PROJECT_STRUCTURE_HANDLERS = {
