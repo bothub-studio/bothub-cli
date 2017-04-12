@@ -109,7 +109,7 @@ def rm(name, api=None, config=None):
     projects = _api.list_projects()
     _projects = [p for p in projects if p['name'] == name]
     if not _projects:
-        raise ValueError('The Project does not exist')
+        raise ValueError('No such project: {}'.format(name))
     for project in _projects:
         _api.delete_project(project['id'])
 
