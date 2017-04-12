@@ -1,3 +1,9 @@
+0.1.4
+-----
+
+* add a ``bothub`` package dependency
+
+
 0.1.3
 -----
 
