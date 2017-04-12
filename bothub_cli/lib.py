@@ -108,6 +108,8 @@ def rm(name, api=None, config=None):
     _api.load_auth(_config)
     projects = _api.list_projects()
     _projects = [p for p in projects if p['name'] == name]
+    if not _projects:
+        raise ValueError('The Project does not exist')
     for project in _projects:
         _api.delete_project(project['id'])
 
