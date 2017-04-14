@@ -8,6 +8,7 @@ import tarfile
 from bothub_cli.api import Api
 from bothub_cli.config import Config
 from bothub_cli.config import ProjectConfig
+from bothub_cli import exceptions as exc
 from bothub_cli.utils import safe_mkdir
 from bothub_cli.utils import write_content_to_file
 from bothub_cli.utils import read_content_from_file
@@ -17,6 +18,14 @@ from bothub_cli.template import code as bot_code
 API = Api()
 CONFIG = Config()
 PROJECT_CONFIG = ProjectConfig()
+
+
+def get_project_id(project_config):
+    project_id = project_config.get('id')
+    if not project_id:
+        raise exc.ImproperlyConfigured("Invalid project directory. Did you run 'bothub init' for current directory before?")
+
+    return project_id
 
 
 def create_py_project_structure():
@@ -83,10 +92,10 @@ def deploy(project_config=None, api=None, config=None):
     make_dist_package(dist_file_path)
 
     with open(dist_file_path, 'rb') as dist_file:
-        dependency = read_content_from_file('requirements.txt') or ''
-
+        dependency = read_content_from_file('requirements.txt') or 'bothub'
+        project_id = get_project_id(_project_config)
         _api.upload_code(
-            _project_config.get('id'),
+            project_id,
             _project_config.get('programming-language'),
             dist_file,
             dependency
@@ -109,7 +118,7 @@ def rm(name, api=None, config=None):
     projects = _api.list_projects()
     _projects = [p for p in projects if p['name'] == name]
     if not _projects:
-        raise ValueError('No such project: {}'.format(name))
+        raise exc.NotFound('No such project: {}'.format(name))
     for project in _projects:
         _api.delete_project(project['id'])
 
@@ -121,7 +130,8 @@ def add_channel(channel, credentials, api=None, config=None, project_config=None
     _config.load()
     _project_config.load()
     _api.load_auth(_config)
-    _api.add_project_channel(_project_config.get('id'), channel, credentials)
+    project_id = get_project_id(_project_config)
+    _api.add_project_channel(project_id, channel, credentials)
 
 
 def ls_channel(verbose=False, api=None, config=None, project_config=None):
@@ -131,7 +141,8 @@ def ls_channel(verbose=False, api=None, config=None, project_config=None):
     _config.load()
     _project_config.load()
     _api.load_auth(_config)
-    channels = _api.get_project_channels(_project_config.get('id'))
+    project_id = get_project_id(_project_config)
+    channels = _api.get_project_channels(project_id)
     if verbose:
         result = [[c['channel'], c['credentials']] for c in channels]
     else:
@@ -146,7 +157,8 @@ def rm_channel(channel, api=None, config=None, project_config=None):
     _config.load()
     _project_config.load()
     _api.load_auth(_config)
-    _api.delete_project_channels(_project_config.get('id'), channel)
+    project_id = get_project_id(_project_config)
+    _api.delete_project_channels(project_id, channel)
 
 
 def get_properties(key, api=None, config=None, project_config=None):
@@ -156,7 +168,8 @@ def get_properties(key, api=None, config=None, project_config=None):
     _config.load()
     _project_config.load()
     _api.load_auth(_config)
-    data = _api.get_project_property(_project_config.get('id'))
+    project_id = get_project_id(_project_config)
+    data = _api.get_project_property(project_id)
     return data.get(key)
 
 
@@ -167,4 +180,5 @@ def set_properties(key, value, api=None, config=None, project_config=None):
     _config.load()
     _project_config.load()
     _api.load_auth(_config)
-    return _api.set_project_property(_project_config.get('id'), key, value)
+    project_id = get_project_id(_project_config)
+    return _api.set_project_property(project_id, key, value)
