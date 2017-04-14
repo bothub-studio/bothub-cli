@@ -10,6 +10,10 @@ from bothub_cli import lib
 from bothub_cli import exceptions as exc
 
 
+def print_error(msg):
+    click.secho(msg, fg='red')
+
+
 @click.group()
 def cli():
     '''Bothub is a command line tool that configure, init,
@@ -40,12 +44,18 @@ def init():
             if os.path.isfile('bothub.yml'):
                 raise exc.Duplicated('Project definition file [bothub.yml] is already exists')
             name = click.prompt('Project name')
+            normalized_name = name.strip()
+            if not normalized_name:
+                continue
             click.secho('Creating project...', fg='green')
-            lib.init(name)
+            lib.init(normalized_name)
             click.secho('Created.', fg='green')
             break
+        except exc.Cancel:
+            print_error('Cancelled')
+            break
         except exc.CliException as ex:
-            click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+            print_error('{}: {}'.format(ex.__class__.__name__, ex))
             break
 
 
