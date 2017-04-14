@@ -40,8 +40,9 @@ def init():
             if os.path.isfile('bothub.yml'):
                 raise exc.Duplicated('Project definition file [bothub.yml] is already exists')
             name = click.prompt('Project name')
+            description = click.prompt('Description')
             click.secho('Creating project...', fg='green')
-            lib.init(name)
+            lib.init(name, description)
             click.secho('Created.', fg='green')
             break
         except exc.CliException as ex:

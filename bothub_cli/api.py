@@ -63,9 +63,9 @@ class Api(object):
         headers = {'Authorization': 'Bearer {}'.format(self.auth_token)}
         return headers
 
-    def create_project(self, name):
+    def create_project(self, name, description):
         url = self.gen_url('projects')
-        data = {'name': name, 'short_name': name}
+        data = {'name': name, 'short_name': name, 'description': description}
         headers = self.get_auth_headers()
         response = self.transport.post(url, json=data, headers=headers)
         self.check_response(response)

@@ -41,13 +41,13 @@ def authenticate(username, password, api=None, config=None):
     _config.save()
 
 
-def init(name, project_config=None, api=None, config=None):
+def init(name, description, project_config=None, api=None, config=None):
     _api = api or API
     _config = config or CONFIG
     _project_config = project_config or PROJECT_CONFIG
     _config.load()
     _api.load_auth(_config)
-    project = _api.create_project(name)
+    project = _api.create_project(name, description)
     project_id = project['id']
     project_name = project['name']
     programming_language = 'python3'
