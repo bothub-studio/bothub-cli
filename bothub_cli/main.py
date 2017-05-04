@@ -160,6 +160,20 @@ def print_properties(d):
         click.echo('{0: <{2}}: {1}'.format(key, val, width + 3))
 
 
+@property.command(name='ls')
+def ls_property():
+    '''Get property list'''
+    try:
+        properties = lib.ls_properties()
+        properties_list = [(k, v) for k, v in properties.items()]
+        header = ['Name', 'Value']
+        data = [header] + properties_list
+        table = Table(data)
+        click.secho(table.table)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
 @property.command(name='get')
 @click.argument('key')
 def get_property(key):
@@ -181,6 +195,16 @@ def set_property(key, value):
     '''Set value of a property'''
     try:
         lib.set_properties(key, value)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@property.command(name='rm')
+@click.argument('key')
+def rm_property(key):
+    '''Delete a property'''
+    try:
+        lib.rm_properties(key)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 

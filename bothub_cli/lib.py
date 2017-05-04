@@ -3,6 +3,7 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
 import os
+import json
 import tarfile
 
 from bothub_cli.api import Api
@@ -161,6 +162,17 @@ def rm_channel(channel, api=None, config=None, project_config=None):
     _api.delete_project_channels(project_id, channel)
 
 
+def ls_properties(api=None, config=None, project_config=None):
+    _api = api or API
+    _config = config or CONFIG
+    _project_config = project_config or PROJECT_CONFIG
+    _config.load()
+    _project_config.load()
+    _api.load_auth(_config)
+    project_id = get_project_id(_project_config)
+    return _api.get_project_property(project_id)
+
+
 def get_properties(key, api=None, config=None, project_config=None):
     _api = api or API
     _config = config or CONFIG
@@ -174,6 +186,11 @@ def get_properties(key, api=None, config=None, project_config=None):
 
 
 def set_properties(key, value, api=None, config=None, project_config=None):
+    try:
+        _value = json.loads(value)
+    except ValueError:
+        raise exc.InvalidValue('Not proper JSON type: {}'.format(value))
+
     _api = api or API
     _config = config or CONFIG
     _project_config = project_config or PROJECT_CONFIG
@@ -181,4 +198,15 @@ def set_properties(key, value, api=None, config=None, project_config=None):
     _project_config.load()
     _api.load_auth(_config)
     project_id = get_project_id(_project_config)
-    return _api.set_project_property(project_id, key, value)
+    return _api.set_project_property(project_id, key, _value)
+
+
+def rm_properties(key, api=None, config=None, project_config=None):
+    _api = api or API
+    _config = config or CONFIG
+    _project_config = project_config or PROJECT_CONFIG
+    _config.load()
+    _project_config.load()
+    _api.load_auth(_config)
+    project_id = get_project_id(_project_config)
+    _api.delete_project_property(project_id, key)

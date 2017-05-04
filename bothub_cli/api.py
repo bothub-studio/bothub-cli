@@ -141,3 +141,9 @@ class Api(object):
         response = self.send_request(url, headers=headers, method='get')
         self.check_response(response)
         return response.json()['data']
+
+    def delete_project_property(self, project_id, key):
+        url = self.gen_url('projects', project_id, 'properties', key)
+        headers = self.get_auth_headers()
+        response = self.send_request(url, headers=headers, method='delete')
+        self.check_response(response)

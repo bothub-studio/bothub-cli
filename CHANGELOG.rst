@@ -3,6 +3,7 @@
 
 * add a ``bothub`` package dependency
 * change an error message
+* add subcommand ``ls`` and ``rm`` for ``property`` command
 
 
 0.1.3

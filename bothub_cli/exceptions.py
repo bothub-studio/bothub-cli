@@ -29,3 +29,7 @@ class Cancel(CliException):
 
 class ImproperlyConfigured(CliException):
     pass
+
+
+class InvalidValue(CliException):
+    pass
