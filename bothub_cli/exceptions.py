@@ -21,3 +21,19 @@ class NoCredential(CliException):
 
 class Duplicated(CliException):
     pass
+
+
+class Cancel(CliException):
+    pass
+
+
+class ImproperlyConfigured(CliException):
+    pass
+
+
+class InvalidValue(CliException):
+    pass
+
+
+class ModuleLoadException(CliException):
+    pass

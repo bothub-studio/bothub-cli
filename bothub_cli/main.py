@@ -10,6 +10,10 @@ from bothub_cli import lib
 from bothub_cli import exceptions as exc
 
 
+def print_error(msg):
+    click.secho(msg, fg='red')
+
+
 @click.group()
 def cli():
     '''Bothub is a command line tool that configure, init,
@@ -40,12 +44,19 @@ def init():
             if os.path.isfile('bothub.yml'):
                 raise exc.Duplicated('Project definition file [bothub.yml] is already exists')
             name = click.prompt('Project name')
+            normalized_name = name.strip()
+            if not normalized_name:
+                continue
+            description = click.prompt('Description')
             click.secho('Creating project...', fg='green')
-            lib.init(name)
+            lib.init(normalized_name, description)
             click.secho('Created.', fg='green')
             break
+        except exc.Cancel:
+            print_error('Cancelled')
+            break
         except exc.CliException as ex:
-            click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+            print_error('{}: {}'.format(ex.__class__.__name__, ex))
             break
 
 
@@ -77,6 +88,8 @@ def rm(name):
         lib.rm(name)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+    except ValueError as err:
+        click.secho('{}'.format(err), fg='red')
 
 
 @cli.group()
@@ -147,6 +160,20 @@ def print_properties(d):
         click.echo('{0: <{2}}: {1}'.format(key, val, width + 3))
 
 
+@property.command(name='ls')
+def ls_property():
+    '''Get property list'''
+    try:
+        properties = lib.ls_properties()
+        properties_list = [(k, v) for k, v in properties.items()]
+        header = ['Name', 'Value']
+        data = [header] + properties_list
+        table = Table(data)
+        click.secho(table.table)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
 @property.command(name='get')
 @click.argument('key')
 def get_property(key):
@@ -168,6 +195,25 @@ def set_property(key, value):
     '''Set value of a property'''
     try:
         lib.set_properties(key, value)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@property.command(name='rm')
+@click.argument('key')
+def rm_property(key):
+    '''Delete a property'''
+    try:
+        lib.rm_properties(key)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@cli.command(name='test')
+def test():
+    '''Run test chat session'''
+    try:
+        lib.test()
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
