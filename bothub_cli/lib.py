@@ -3,8 +3,12 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
 import os
+import sys
 import json
 import tarfile
+
+from bothub_client.clients import ConsoleChannelClient
+from bothub_client.clients import LocMemStorageClient
 
 from bothub_cli.api import Api
 from bothub_cli.config import Config
@@ -210,3 +214,56 @@ def rm_properties(key, api=None, config=None, project_config=None):
     _api.load_auth(_config)
     project_id = get_project_id(_project_config)
     _api.delete_project_property(project_id, key)
+
+
+def print_cursor():
+    print('BotHub>', end=' ', flush=True)
+
+
+def make_event(message):
+    return {
+        'trigger': 'cli',
+        'channel': 'cli',
+        'sender': {
+            'id': 'localuser',
+            'name': 'Local user'
+        },
+        'content': message,
+        'raw_data': message
+    }
+
+
+def test(config=None, project_config=None):
+    _config = config or CONFIG
+    _project_config = project_config or PROJECT_CONFIG
+    _config.load()
+    _project_config.load()
+
+    try:
+        sys.path.append('.')
+        __import__('bothub.bot')
+    except ImportError:
+        if sys.exc_info()[-1].tb_next:
+            raise
+        else:
+            raise exc.ModuleLoadException('We found no valid bothub app on bothub/bot.py')
+
+    mod = sys.modules['bothub.bot']
+    channel_client = ConsoleChannelClient()
+    storage_client = LocMemStorageClient()
+    bot = mod.Bot(channel_client=channel_client, storage_client=storage_client)
+
+    print_cursor()
+    line = sys.stdin.readline()
+    while line:
+        try:
+            event = make_event(line)
+            context = {}
+            bot.handle_message(event, context)
+            print_cursor()
+            line = sys.stdin.readline()
+        except Exception as ex:
+            print(ex)
+            print_cursor()
+            line = sys.stdin.readline()
+    print('\n')

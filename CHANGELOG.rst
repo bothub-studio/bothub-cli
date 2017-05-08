@@ -4,6 +4,7 @@
 * add a ``bothub`` package dependency
 * change an error message
 * add subcommand ``ls`` and ``rm`` for ``property`` command
+* add a test command
 
 
 0.1.3

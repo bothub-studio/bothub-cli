@@ -33,3 +33,7 @@ class ImproperlyConfigured(CliException):
 
 class InvalidValue(CliException):
     pass
+
+
+class ModuleLoadException(CliException):
+    pass

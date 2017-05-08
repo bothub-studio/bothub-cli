@@ -209,5 +209,14 @@ def rm_property(key):
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 
+@cli.command(name='test')
+def test():
+    '''Run test chat session'''
+    try:
+        lib.test()
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
 def main():
     cli()
