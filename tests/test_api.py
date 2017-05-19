@@ -35,6 +35,6 @@ def test_authenticate_should_returns_token():
 def test_create_project_should_returns_project():
     transport, api = fixture_api()
     record_project(transport)
-    project = api.create_project('testproject')
+    project = api.create_project('testproject', '')
     assert project['name'] == 'testproject'
     assert project['id'] == 1

@@ -84,12 +84,29 @@ class Api(object):
         except exc.Duplicated:
             raise exc.Duplicated('Project name already exists. Please use other name')
 
+    def get_project(self, project_id):
+        try:
+            url = self.gen_url('projects', project_id)
+            headers = self.get_auth_headers()
+            response = self.send_request(url, headers=headers)
+            self.check_response(response)
+            return response.json()['data']
+        except exc.NotFound:
+            raise exc.NotFound('Project {} is not exists.'.format(project_id))
+
     def upload_code(self, project_id, language, code, dependency):
         url = self.gen_url('projects', project_id, 'bot')
         data = {'language': language, 'dependency': dependency}
         files = {'code': code}
         headers = self.get_auth_headers()
         response = self.send_request(url, data=data, files=files, headers=headers, method='post')
+        self.check_response(response)
+        return response.json()['data']
+
+    def get_code(self, project_id):
+        url = self.gen_url('projects', project_id, 'bot')
+        headers = self.get_auth_headers()
+        response = self.send_request(url, headers=headers, method='get')
         self.check_response(response)
         return response.json()['data']
 

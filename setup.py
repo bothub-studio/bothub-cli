@@ -3,6 +3,7 @@
 
 try:
     from setuptools import setup, find_packages
+    import codecs
 except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
@@ -12,12 +13,12 @@ from os import path
 
 HERE = path.abspath(path.dirname(__file__))
 
-with open(path.join(HERE, 'README.rst'), encoding='utf-8') as f:
+with codecs.open(path.join(HERE, 'README.rst'), encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 
 setup(
     name='bothub-cli',
-    version='0.1.4',
+    version='0.1.5',
     description='A CLI tool for bothub.studio service',
     long_description=LONG_DESCRIPTION,
     author='Jeongsoo Park',
@@ -33,7 +34,8 @@ setup(
         'click',
         'requests',
         'pyyaml',
-        'terminaltables'
+        'terminaltables',
+        'bothub>=0.1.6',
     ],
     setup_requires=[
         'pytest-runner',

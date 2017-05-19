@@ -1,3 +1,10 @@
+0.1.5
+-----
+
+* add a ``clone`` command
+* refactor cli module to use class, change act of init command to create project even when current directory has bothub.yml but not a valid project
+
+
 0.1.4
 -----
 
