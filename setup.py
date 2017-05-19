@@ -3,6 +3,7 @@
 
 try:
     from setuptools import setup, find_packages
+    import codecs
 except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
@@ -12,7 +13,7 @@ from os import path
 
 HERE = path.abspath(path.dirname(__file__))
 
-with open(path.join(HERE, 'README.rst'), encoding='utf-8') as f:
+with codecs.open(path.join(HERE, 'README.rst'), encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 
 setup(
