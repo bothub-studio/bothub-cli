@@ -63,8 +63,22 @@ def init():
 @cli.command()
 def deploy():
     '''Deploy project'''
-    lib.deploy()
-    click.secho('Deployed.', fg='green')
+    try:
+        lib.deploy()
+        click.secho('Deployed.', fg='green')
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@cli.command()
+@click.argument('project-name')
+def clone(project_name):
+    '''Clone existing project'''
+    try:
+        lib.clone(project_name)
+        click.secho('Project {} is cloned.'.format(project_name), fg='green')
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 
 @cli.command()

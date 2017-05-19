@@ -33,6 +33,18 @@ def get_project_id(project_config):
     return project_id
 
 
+def get_project_id_with_name(project_name, api=None, config=None):
+    _api = api or API
+    _config = config or CONFIG
+    _config.load()
+    _api.load_auth(_config)
+    projects = _api.list_projects()
+    for p in projects:
+        if p['name'] == project_name:
+            return p['id']
+    raise exc.NotFoundException('Such project {} is not found'.format(project_name))
+
+
 def create_py_project_structure():
     safe_mkdir('bothub')
     safe_mkdir('tests')
@@ -84,6 +96,11 @@ def make_dist_package(dist_file_path):
                 tout.add(fname)
 
 
+def extract_dist_package(dist_file_path):
+    with tarfile.open(dist_file_path, 'r:gz') as tin:
+        tin.extractall()
+
+
 def deploy(project_config=None, api=None, config=None):
     _api = api or API
     _config = config or CONFIG
@@ -105,6 +122,25 @@ def deploy(project_config=None, api=None, config=None):
             dist_file,
             dependency
         )
+
+
+def clone(project_name, api=None, config=None):
+    project_id = get_project_id_with_name(project_name)
+    _api = api or API
+    _config = config or CONFIG
+    _config.load()
+    _api.load_auth(_config)
+
+    response = _api.get_code(project_id)
+    code = response['code']
+    code_byte = eval(code)
+
+    with open('code.tgz', 'wb') as code_file:
+        code_file.write(code_byte)
+
+    extract_dist_package('code.tgz')
+    if os.path.isfile('code.tgz'):
+        os.remove('code.tgz')
 
 
 def ls(api=None, config=None):

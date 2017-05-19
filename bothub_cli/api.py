@@ -93,6 +93,13 @@ class Api(object):
         self.check_response(response)
         return response.json()['data']
 
+    def get_code(self, project_id):
+        url = self.gen_url('projects', project_id, 'bot')
+        headers = self.get_auth_headers()
+        response = self.send_request(url, headers=headers, method='get')
+        self.check_response(response)
+        return response.json()['data']
+
     def list_projects(self):
         url = self.gen_url('users', 'self', 'projects')
         headers = self.get_auth_headers()
