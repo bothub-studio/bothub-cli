@@ -51,7 +51,8 @@ def test_authenticate_should_save_config_file():
     transport, api = fixture_api()
     record_auth_token(transport)
     config = fixture_config()
-    lib.authenticate('testuser', 'testpw', api=api, config=config)
+    lib_cli = lib.Cli(config=config, api=api)
+    lib_cli.authenticate('testuser', 'testpw')
     assert config.get('auth_token') == 'testtoken'
 
 
@@ -62,7 +63,8 @@ def test_init_should_save_config_file():
     config.set('auth_token', 'testtoken')
     config.save()
     project_config = fixture_project_config()
-    lib.init('testproject', project_config=project_config, api=api, config=config)
+    lib_cli = lib.Cli(project_config=project_config, api=api, config=config)
+    lib_cli.init('testproject', '')
     assert project_config.get('id') == 3
     assert project_config.get('name') == 'testproject'
     with open(project_config.path) as fin:
