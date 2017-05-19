@@ -20,31 +20,6 @@ from bothub_cli.utils import read_content_from_file
 from bothub_cli.template import code as bot_code
 
 
-API = Api()
-CONFIG = Config()
-PROJECT_CONFIG = ProjectConfig()
-
-
-def get_project_id(project_config):
-    project_id = project_config.get('id')
-    if not project_id:
-        raise exc.ImproperlyConfigured("Invalid project directory. Did you run 'bothub init' for current directory before?")
-
-    return project_id
-
-
-def get_project_id_with_name(project_name, api=None, config=None):
-    _api = api or API
-    _config = config or CONFIG
-    _config.load()
-    _api.load_auth(_config)
-    projects = _api.list_projects()
-    for p in projects:
-        if p['name'] == project_name:
-            return p['id']
-    raise exc.NotFoundException('Such project {} is not found'.format(project_name))
-
-
 def create_py_project_structure():
     safe_mkdir('bothub')
     safe_mkdir('tests')
@@ -57,31 +32,6 @@ PROJECT_STRUCTURE_HANDLERS = {
     'python3': create_py_project_structure,
     'python': create_py_project_structure,
 }
-
-
-def authenticate(username, password, api=None, config=None):
-    _api = api or API
-    _config = config or CONFIG
-    token = _api.authenticate(username, password)
-    _config.set('auth_token', token)
-    _config.save()
-
-
-def init(name, description, project_config=None, api=None, config=None):
-    _api = api or API
-    _config = config or CONFIG
-    _project_config = project_config or PROJECT_CONFIG
-    _config.load()
-    _api.load_auth(_config)
-    project = _api.create_project(name, description)
-    project_id = project['id']
-    project_name = project['name']
-    programming_language = 'python3'
-    _project_config.set('id', project_id)
-    _project_config.set('name', project_name)
-    _project_config.set('programming-language', programming_language)
-    _project_config.save()
-    PROJECT_STRUCTURE_HANDLERS[programming_language]()
 
 
 def make_dist_package(dist_file_path):
@@ -101,157 +51,6 @@ def extract_dist_package(dist_file_path):
         tin.extractall()
 
 
-def deploy(project_config=None, api=None, config=None):
-    _api = api or API
-    _config = config or CONFIG
-    _project_config = project_config or PROJECT_CONFIG
-    _config.load()
-    _project_config.load()
-    _api.load_auth(_config)
-
-    safe_mkdir('dist')
-    dist_file_path = os.path.join('dist', 'bot.tgz')
-    make_dist_package(dist_file_path)
-
-    with open(dist_file_path, 'rb') as dist_file:
-        dependency = read_content_from_file('requirements.txt') or 'bothub'
-        project_id = get_project_id(_project_config)
-        _api.upload_code(
-            project_id,
-            _project_config.get('programming-language'),
-            dist_file,
-            dependency
-        )
-
-
-def clone(project_name, api=None, config=None):
-    project_id = get_project_id_with_name(project_name)
-    _api = api or API
-    _config = config or CONFIG
-    _config.load()
-    _api.load_auth(_config)
-
-    response = _api.get_code(project_id)
-    code = response['code']
-    code_byte = eval(code)
-
-    with open('code.tgz', 'wb') as code_file:
-        code_file.write(code_byte)
-
-    extract_dist_package('code.tgz')
-    if os.path.isfile('code.tgz'):
-        os.remove('code.tgz')
-
-
-def ls(api=None, config=None):
-    _api = api or API
-    _config = config or CONFIG
-    _config.load()
-    _api.load_auth(_config)
-    return [[p['name']] for p in _api.list_projects()]
-
-
-def rm(name, api=None, config=None):
-    _api = api or API
-    _config = config or CONFIG
-    _config.load()
-    _api.load_auth(_config)
-    projects = _api.list_projects()
-    _projects = [p for p in projects if p['name'] == name]
-    if not _projects:
-        raise exc.NotFound('No such project: {}'.format(name))
-    for project in _projects:
-        _api.delete_project(project['id'])
-
-
-def add_channel(channel, credentials, api=None, config=None, project_config=None):
-    _api = api or API
-    _config = config or CONFIG
-    _project_config = project_config or PROJECT_CONFIG
-    _config.load()
-    _project_config.load()
-    _api.load_auth(_config)
-    project_id = get_project_id(_project_config)
-    _api.add_project_channel(project_id, channel, credentials)
-
-
-def ls_channel(verbose=False, api=None, config=None, project_config=None):
-    _api = api or API
-    _config = config or CONFIG
-    _project_config = project_config or PROJECT_CONFIG
-    _config.load()
-    _project_config.load()
-    _api.load_auth(_config)
-    project_id = get_project_id(_project_config)
-    channels = _api.get_project_channels(project_id)
-    if verbose:
-        result = [[c['channel'], c['credentials']] for c in channels]
-    else:
-        result = [[c['channel']] for c in channels]
-    return result
-
-
-def rm_channel(channel, api=None, config=None, project_config=None):
-    _api = api or API
-    _config = config or CONFIG
-    _project_config = project_config or PROJECT_CONFIG
-    _config.load()
-    _project_config.load()
-    _api.load_auth(_config)
-    project_id = get_project_id(_project_config)
-    _api.delete_project_channels(project_id, channel)
-
-
-def ls_properties(api=None, config=None, project_config=None):
-    _api = api or API
-    _config = config or CONFIG
-    _project_config = project_config or PROJECT_CONFIG
-    _config.load()
-    _project_config.load()
-    _api.load_auth(_config)
-    project_id = get_project_id(_project_config)
-    return _api.get_project_property(project_id)
-
-
-def get_properties(key, api=None, config=None, project_config=None):
-    _api = api or API
-    _config = config or CONFIG
-    _project_config = project_config or PROJECT_CONFIG
-    _config.load()
-    _project_config.load()
-    _api.load_auth(_config)
-    project_id = get_project_id(_project_config)
-    data = _api.get_project_property(project_id)
-    return data.get(key)
-
-
-def set_properties(key, value, api=None, config=None, project_config=None):
-    try:
-        _value = json.loads(value)
-    except ValueError:
-        raise exc.InvalidValue('Not proper JSON type: {}'.format(value))
-
-    _api = api or API
-    _config = config or CONFIG
-    _project_config = project_config or PROJECT_CONFIG
-    _config.load()
-    _project_config.load()
-    _api.load_auth(_config)
-    project_id = get_project_id(_project_config)
-    return _api.set_project_property(project_id, key, _value)
-
-
-def rm_properties(key, api=None, config=None, project_config=None):
-    _api = api or API
-    _config = config or CONFIG
-    _project_config = project_config or PROJECT_CONFIG
-    _config.load()
-    _project_config.load()
-    _api.load_auth(_config)
-    project_id = get_project_id(_project_config)
-    _api.delete_project_property(project_id, key)
-
-
 def print_cursor():
     print('BotHub>', end=' ', flush=True)
 
@@ -269,37 +68,182 @@ def make_event(message):
     }
 
 
-def test(config=None, project_config=None):
-    _config = config or CONFIG
-    _project_config = project_config or PROJECT_CONFIG
-    _config.load()
-    _project_config.load()
+class Cli(object):
+    def __init__(self, api=None, config=None, project_config=None):
+        self.api = api or Api()
+        self.config = config or Config()
+        self.project_config = project_config or ProjectConfig()
 
-    try:
-        sys.path.append('.')
-        __import__('bothub.bot')
-    except ImportError:
-        if sys.exc_info()[-1].tb_next:
-            raise
+    def load_auth(self):
+        self.config.load()
+        self.api.load_auth(self.config)
+
+    def get_current_project_id(self):
+        self.project_config.load()
+        project_id = self.project_config.get('id')
+        if not project_id:
+            raise exc.ImproperlyConfigured("Invalid project directory. "
+                                           "Did you run 'bothub init' for current directory before?")
+        return project_id
+
+    def get_project(self, project_id):
+        self.load_auth()
+        return self.api.get_project(project_id)
+
+    def authenticate(self, username, password):
+        token = self.api.authenticate(username, password)
+        self.config.set('auth_token', token)
+        self.config.save()
+
+    def get_project_id_with_name(self, project_name):
+        self.load_auth()
+        projects = self.api.list_projects()
+        for p in projects:
+            if p['name'] == project_name:
+                return p['id']
+        raise exc.NotFound('Such project {} is not found'.format(project_name))
+
+    def init(self, name, description, skel=True):
+        self.load_auth()
+        project = self.api.create_project(name, description)
+        project_id = project['id']
+        project_name = project['name']
+        programming_language = 'python3'
+        self.project_config.set('id', project_id)
+        self.project_config.set('name', project_name)
+        self.project_config.set('programming-language', programming_language)
+        self.project_config.save()
+        if skel:
+            PROJECT_STRUCTURE_HANDLERS[programming_language]()
+
+    def deploy(self):
+        self.load_auth()
+        self.project_config.load()
+
+        safe_mkdir('dist')
+        dist_file_path = os.path.join('dist', 'bot.tgz')
+        make_dist_package(dist_file_path)
+
+        with open(dist_file_path, 'rb') as dist_file:
+            dependency = read_content_from_file('requirements.txt') or 'bothub'
+            project_id = self.get_current_project_id()
+            self.api.upload_code(
+                project_id,
+                self.project_config.get('programming-language'),
+                dist_file,
+                dependency
+            )
+
+    def clone(self, project_name):
+        project_id = self.get_project_id_with_name(project_name)
+        self.load_auth()
+
+        response = self.api.get_code(project_id)
+        code = response['code']
+        code_byte = eval(code)
+
+        with open('code.tgz', 'wb') as code_file:
+            code_file.write(code_byte)
+
+        extract_dist_package('code.tgz')
+        if os.path.isfile('code.tgz'):
+            os.remove('code.tgz')
+
+    def ls(self):
+        self.load_auth()
+        return [[p['name']] for p in self.api.list_projects()]
+
+    def rm(self, name):
+        self.load_auth()
+        projects = self.api.list_projects()
+        _projects = [p for p in projects if p['name'] == name]
+        if not _projects:
+            raise exc.NotFound('No such project: {}'.format(name))
+        for project in _projects:
+            self.api.delete_project(project['id'])
+
+    def add_channel(self, channel, credentials):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        self.api.add_project_channel(project_id, channel, credentials)
+
+    def ls_channel(self, verbose=False):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        channels = self.api.get_project_channels(project_id)
+        if verbose:
+            result = [[c['channel'], c['credentials']] for c in channels]
         else:
-            raise exc.ModuleLoadException('We found no valid bothub app on bothub/bot.py')
+            result = [[c['channel']] for c in channels]
+        return result
 
-    mod = sys.modules['bothub.bot']
-    channel_client = ConsoleChannelClient()
-    storage_client = LocMemStorageClient()
-    bot = mod.Bot(channel_client=channel_client, storage_client=storage_client)
+    def rm_channel(self, channel):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        self.api.delete_project_channels(project_id, channel)
 
-    print_cursor()
-    line = sys.stdin.readline()
-    while line:
+    def ls_properties(self):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        return self.api.get_project_property(project_id)
+
+    def get_properties(self, key):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        data = self.api.get_project_property(project_id)
+        return data.get(key)
+
+    def set_properties(self, key, value):
         try:
-            event = make_event(line)
-            context = {}
-            bot.handle_message(event, context)
-            print_cursor()
-            line = sys.stdin.readline()
-        except Exception as ex:
-            print(ex)
-            print_cursor()
-            line = sys.stdin.readline()
-    print('\n')
+            _value = json.loads(value)
+        except ValueError:
+            raise exc.InvalidValue('Not proper JSON type: {}'.format(value))
+
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        return self.api.set_project_property(project_id, key, _value)
+
+    def rm_properties(self, key):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        self.api.delete_project_property(project_id, key)
+
+    def test(self):
+        self.load_auth()
+        self.project_config.load()
+
+        try:
+            sys.path.append('.')
+            __import__('bothub.bot')
+        except ImportError:
+            if sys.exc_info()[-1].tb_next:
+                raise
+            else:
+                raise exc.ModuleLoadException('We found no valid bothub app on bothub/bot.py')
+
+        mod = sys.modules['bothub.bot']
+        channel_client = ConsoleChannelClient()
+        storage_client = LocMemStorageClient()
+        bot = mod.Bot(channel_client=channel_client, storage_client=storage_client)
+
+        print_cursor()
+        line = sys.stdin.readline()
+        while line:
+            try:
+                event = make_event(line)
+                context = {}
+                bot.handle_message(event, context)
+                print_cursor()
+                line = sys.stdin.readline()
+            except Exception as ex:
+                print(ex)
+                print_cursor()
+                line = sys.stdin.readline()
+        print('\n')

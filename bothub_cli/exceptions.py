@@ -37,7 +37,3 @@ class InvalidValue(CliException):
 
 class ModuleLoadException(CliException):
     pass
-
-
-class NotFoundException(CliException):
-    pass

@@ -29,7 +29,8 @@ def configure():
         username = click.prompt('username')
         password = click.prompt('password', hide_input=True)
         click.secho('Connecting to server...', fg='green')
-        lib.authenticate(username, password)
+        lib_cli = lib.Cli()
+        lib_cli.authenticate(username, password)
         click.secho('Authorized', fg='green')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
@@ -41,15 +42,28 @@ def init():
     click.echo('Initialize a new project')
     while True:
         try:
+            lib_cli = lib.Cli()
+            _name = None
+            skel = True
+            # if bothub.yml is exist, ask project_id is exists
+            # if then, raise Duplicated
+            # else, read bothub.yml and use parameters except project_id
             if os.path.isfile('bothub.yml'):
-                raise exc.Duplicated('Project definition file [bothub.yml] is already exists')
-            name = click.prompt('Project name')
+                try:
+                    project_id = lib_cli.get_current_project_id()
+                    lib_cli.get_project(project_id)
+                    raise exc.Duplicated('Project definition file [bothub.yml] is already exists')
+                except exc.NotFound:
+                    print_error('bothub.yml is exist but not a valid project. Create the project again')
+                    _name = lib_cli.project_config.get('name')
+                    skel = False
+
+            name = _name or click.prompt('Project name')
             normalized_name = name.strip()
             if not normalized_name:
                 continue
-            description = click.prompt('Description')
             click.secho('Creating project...', fg='green')
-            lib.init(normalized_name, description)
+            lib_cli.init(normalized_name, '', skel)
             click.secho('Created.', fg='green')
             break
         except exc.Cancel:
@@ -64,7 +78,8 @@ def init():
 def deploy():
     '''Deploy project'''
     try:
-        lib.deploy()
+        lib_cli = lib.Cli()
+        lib_cli.deploy()
         click.secho('Deployed.', fg='green')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
@@ -75,7 +90,8 @@ def deploy():
 def clone(project_name):
     '''Clone existing project'''
     try:
-        lib.clone(project_name)
+        lib_cli = lib.Cli()
+        lib_cli.clone(project_name)
         click.secho('Project {} is cloned.'.format(project_name), fg='green')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
@@ -85,7 +101,8 @@ def clone(project_name):
 def ls():
     '''List projects'''
     try:
-        projects = lib.ls()
+        lib_cli = lib.Cli()
+        projects = lib_cli.ls()
         header = ['project']
         data = [header] + projects
         table = Table(data)
@@ -99,7 +116,8 @@ def ls():
 def rm(name):
     '''Delete a project'''
     try:
-        lib.rm(name)
+        lib_cli = lib.Cli()
+        lib_cli.rm(name)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
     except ValueError as err:
@@ -131,7 +149,8 @@ def add_channel(channel, api_key, app_id, app_secret, page_access_token):
         add_option_to_dict(credentials, 'app_id', app_id)
         add_option_to_dict(credentials, 'app_secret', app_secret)
         add_option_to_dict(credentials, 'page_access_token', page_access_token)
-        lib.add_channel(channel, credentials)
+        lib_cli = lib.Cli()
+        lib_cli.add_channel(channel, credentials)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -141,7 +160,8 @@ def add_channel(channel, api_key, app_id, app_secret, page_access_token):
 def ls_channel(long=False):
     '''List channels of current project'''
     try:
-        channels = lib.ls_channel(long)
+        lib_cli = lib.Cli()
+        channels = lib_cli.ls_channel(long)
         header = ['channel']
         if long:
             header.append('credentials')
@@ -157,7 +177,8 @@ def ls_channel(long=False):
 def rm_channel(channel):
     '''Remove a channel from current project'''
     try:
-        lib.rm_channel(channel)
+        lib_cli = lib.Cli()
+        lib_cli.rm_channel(channel)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -178,7 +199,8 @@ def print_properties(d):
 def ls_property():
     '''Get property list'''
     try:
-        properties = lib.ls_properties()
+        lib_cli = lib.Cli()
+        properties = lib_cli.ls_properties()
         properties_list = [(k, v) for k, v in properties.items()]
         header = ['Name', 'Value']
         data = [header] + properties_list
@@ -193,7 +215,8 @@ def ls_property():
 def get_property(key):
     '''Get value of a property'''
     try:
-        result = lib.get_properties(key)
+        lib_cli = lib.Cli()
+        result = lib_cli.get_properties(key)
         if isinstance(result, dict):
             print_properties(result)
         else:
@@ -208,7 +231,8 @@ def get_property(key):
 def set_property(key, value):
     '''Set value of a property'''
     try:
-        lib.set_properties(key, value)
+        lib_cli = lib.Cli()
+        lib_cli.set_properties(key, value)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -218,7 +242,8 @@ def set_property(key, value):
 def rm_property(key):
     '''Delete a property'''
     try:
-        lib.rm_properties(key)
+        lib_cli = lib.Cli()
+        lib_cli.rm_properties(key)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -227,7 +252,8 @@ def rm_property(key):
 def test():
     '''Run test chat session'''
     try:
-        lib.test()
+        lib_cli = lib.Cli()
+        lib_cli.test()
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
