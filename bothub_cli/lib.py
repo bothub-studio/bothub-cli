@@ -20,20 +20,6 @@ from bothub_cli.utils import read_content_from_file
 from bothub_cli.template import code as bot_code
 
 
-def create_py_project_structure():
-    safe_mkdir('bothub')
-    safe_mkdir('tests')
-    write_content_to_file(os.path.join('bothub', '__init__.py'), '')
-    write_content_to_file(os.path.join('bothub', 'bot.py'), bot_code)
-    write_content_to_file('requirements.txt', 'bothub')
-
-
-PROJECT_STRUCTURE_HANDLERS = {
-    'python3': create_py_project_structure,
-    'python': create_py_project_structure,
-}
-
-
 def make_dist_package(dist_file_path):
     if os.path.isfile(dist_file_path):
         os.remove(dist_file_path)
@@ -103,18 +89,12 @@ class Cli(object):
                 return p['id']
         raise exc.NotFound('Such project {} is not found'.format(project_name))
 
-    def init(self, name, description, skel=True):
+    def init(self, name, description):
         self.load_auth()
         project = self.api.create_project(name, description)
         project_id = project['id']
-        project_name = project['name']
         programming_language = 'python3'
-        self.project_config.set('id', project_id)
-        self.project_config.set('name', project_name)
-        self.project_config.set('programming-language', programming_language)
-        self.project_config.save()
-        if skel:
-            PROJECT_STRUCTURE_HANDLERS[programming_language]()
+        self.api.upload_code(project_id, programming_language)
 
     def deploy(self):
         self.load_auth()

@@ -94,10 +94,12 @@ class Api(object):
         except exc.NotFound:
             raise exc.NotFound('Project {} is not exists.'.format(project_id))
 
-    def upload_code(self, project_id, language, code, dependency):
+    def upload_code(self, project_id, language, code=None, dependency=None):
         url = self.gen_url('projects', project_id, 'bot')
-        data = {'language': language, 'dependency': dependency}
-        files = {'code': code}
+        data = {'language': language}
+        if dependency:
+            data['dependency'] = dependency
+        files = {'code': code} if code else None
         headers = self.get_auth_headers()
         response = self.send_request(url, data=data, files=files, headers=headers, method='post')
         self.check_response(response)
