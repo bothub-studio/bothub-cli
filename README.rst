@@ -111,6 +111,7 @@ Usage
 
    Commands:
      channel    Setup channels of current project
+     clone      Clone existing project
      configure  Setup credentials
      deploy     Deploy project
      init       Initialize project
@@ -138,6 +139,12 @@ Initialize project on current directory. Create a echo chatbot code.
    $ bothub init
 
 Deploy current project.
+
+.. code:: clone
+
+   $ bothub clone <project_name>
+
+Clone an existing project.
 
 .. code:: bash
 

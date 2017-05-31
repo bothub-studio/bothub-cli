@@ -44,7 +44,7 @@ def init():
         try:
             lib_cli = lib.Cli()
             _name = None
-            skel = True
+            clone_needed = True
             # if bothub.yml is exist, ask project_id is exists
             # if then, raise Duplicated
             # else, read bothub.yml and use parameters except project_id
@@ -55,15 +55,16 @@ def init():
                     raise exc.Duplicated('Project definition file [bothub.yml] is already exists')
                 except exc.NotFound:
                     print_error('bothub.yml is exist but not a valid project. Create the project again')
-                    _name = lib_cli.project_config.get('name')
-                    skel = False
+                    clone_needed = False
 
-            name = _name or click.prompt('Project name')
+            name = click.prompt('Project name')
             normalized_name = name.strip()
             if not normalized_name:
                 continue
             click.secho('Creating project...', fg='green')
-            lib_cli.init(normalized_name, '', skel)
+            lib_cli.init(normalized_name, '')
+            if clone_needed:
+                lib_cli.clone(normalized_name)
             click.secho('Created.', fg='green')
             break
         except exc.Cancel:
