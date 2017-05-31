@@ -196,4 +196,4 @@ License
 
 Apache License 2.0
 
-.. _Bothub.studio: https://bothub.studio
+.. _Bothub.studio: https://bothub.studio?utm_source=pypi&utm_medium=display&utm_campaign=bothub_cli
