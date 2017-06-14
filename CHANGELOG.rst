@@ -1,8 +1,13 @@
-0.1.6
+0.1.7
 -----
 
 * use bothub.yaml and bothub.yml both for config file name
 * add a ``nlu`` command
+
+
+0.1.6
+-----
+* clone a project code after create the project
 
 
 0.1.5
