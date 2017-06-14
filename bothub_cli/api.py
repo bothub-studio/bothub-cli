@@ -166,3 +166,31 @@ class Api(object):
         headers = self.get_auth_headers()
         response = self.send_request(url, headers=headers, method='delete')
         self.check_response(response)
+
+    def add_project_nlu(self, project_id, nlu, credentials):
+        url = self.gen_url('projects', project_id, 'nlus')
+        data = {'credentials': credentials, 'nlu': nlu}
+        headers = self.get_auth_headers()
+        response = self.send_request(url, json=data, headers=headers, method='post')
+        self.check_response(response)
+        return response.json()['data']
+
+    def get_project_nlus(self, project_id):
+        url = self.gen_url('projects', project_id, 'nlus')
+        headers = self.get_auth_headers()
+        response = self.send_request(url, headers=headers)
+        self.check_response(response)
+        return response.json()['data']
+
+    def get_project_nlu(self, project_id, nlu):
+        url = self.gen_url('projects', project_id, 'nlus', nlu)
+        headers = self.get_auth_headers()
+        response = self.send_request(url, headers=headers)
+        self.check_response(response)
+        return response.json()['data']
+
+    def delete_project_nlu(self, project_id, nlu):
+        url = self.gen_url('projects', project_id, 'nlus', nlu)
+        headers = self.get_auth_headers()
+        response = self.send_request(url, headers=headers, method='delete')
+        self.check_response(response)

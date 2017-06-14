@@ -249,6 +249,54 @@ def rm_property(key):
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 
+@cli.group()
+def nlu():
+    '''Manage project NLU integrations'''
+    pass
+
+
+@nlu.command(name='ls')
+@click.option('-l', '--long', count=True)
+def ls_nlu(long=False):
+    '''List NLU integrations'''
+    try:
+        lib_cli = lib.Cli()
+        nlus = lib_cli.ls_nlus(long)
+        header = ['nlu']
+        if long:
+            header.append('credentials')
+        data = [header] + nlus
+        table = Table(data)
+        click.secho(table.table)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@nlu.command(name='add')
+@click.argument('nlu')
+@click.option('--api-key')
+def add_nlu(nlu, api_key):
+    '''Add a NLU integration'''
+    try:
+        lib_cli = lib.Cli()
+        credentials = {}
+        add_option_to_dict(credentials, 'api_key', api_key)
+        lib_cli.add_nlu(nlu, credentials)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@nlu.command(name='rm')
+@click.argument('nlu')
+def rm_nlu(nlu):
+    '''Delete a NLU integration'''
+    try:
+        lib_cli = lib.Cli()
+        lib_cli.rm_nlu(nlu)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
 @cli.command(name='test')
 def test():
     '''Run test chat session'''

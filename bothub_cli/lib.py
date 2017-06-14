@@ -227,3 +227,26 @@ class Cli(object):
                 print_cursor()
                 line = sys.stdin.readline()
         print('\n')
+
+    def add_nlu(self, nlu, credentials):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        self.api.add_project_nlu(project_id, nlu, credentials)
+
+    def ls_nlus(self, verbose=False):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        nlus = self.api.get_project_nlus(project_id)
+        if verbose:
+            result = [[nlu['nlu'], nlu['credentials']] for nlu in nlus]
+        else:
+            result = [[nlu['nlu']] for nlu in nlus]
+        return result
+
+    def rm_nlu(self, nlu):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        self.api.delete_project_nlu(project_id, nlu)
