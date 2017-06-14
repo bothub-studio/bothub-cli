@@ -6,14 +6,26 @@ import os
 import codecs
 
 import yaml
+from .exceptions import NotFound
 
 from six.moves.configparser import ConfigParser
 
 
 class Config(object):
+    path = None
+
     def __init__(self, path=None):
         self.config = {}
-        self.path = path or os.path.expanduser(os.path.join('~', '.bothub', 'config.yml'))
+        _path = path or os.path.expanduser(os.path.join('~', '.bothub', 'config.yml'))
+        path_list = _path if isinstance(_path, (list, tuple)) else [_path]
+
+        for p in path_list:
+            if os.path.isfile(p):
+                self.path = p
+                break
+        if not self.path:
+            raise NotFound('Not found proper project config file: {}'.format(path))
+
         parent_dir = os.path.dirname(self.path)
         if len(parent_dir) > 0 and not os.path.isdir(parent_dir):
             os.makedirs(parent_dir)
@@ -35,5 +47,5 @@ class Config(object):
 
 
 class ProjectConfig(Config):
-    def __init__(self, path='bothub.yml'):
+    def __init__(self, path=['bothub.yml', 'bothub.yaml']):
         super(ProjectConfig, self).__init__(path)
