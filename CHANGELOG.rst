@@ -1,3 +1,10 @@
+0.1.6
+-----
+
+* use bothub.yaml and bothub.yml both for config file name
+* add a ``nlu`` command
+
+
 0.1.5
 -----
 

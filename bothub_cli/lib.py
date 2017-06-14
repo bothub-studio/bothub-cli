@@ -15,26 +15,13 @@ from bothub_cli.config import Config
 from bothub_cli.config import ProjectConfig
 from bothub_cli import exceptions as exc
 from bothub_cli.utils import safe_mkdir
-from bothub_cli.utils import write_content_to_file
 from bothub_cli.utils import read_content_from_file
-from bothub_cli.template import code as bot_code
-
-
-def create_py_project_structure():
-    safe_mkdir('bothub')
-    safe_mkdir('tests')
-    write_content_to_file(os.path.join('bothub', '__init__.py'), '')
-    write_content_to_file(os.path.join('bothub', 'bot.py'), bot_code)
-    write_content_to_file('requirements.txt', 'bothub')
-
-
-PROJECT_STRUCTURE_HANDLERS = {
-    'python3': create_py_project_structure,
-    'python': create_py_project_structure,
-}
 
 
 def make_dist_package(dist_file_path):
+    '''Make dist package file of current project directory.
+    Includes all files of current dir, bothub dir and tests dir.
+    Dist file is compressed with tar+gzip.'''
     if os.path.isfile(dist_file_path):
         os.remove(dist_file_path)
 
@@ -47,15 +34,18 @@ def make_dist_package(dist_file_path):
 
 
 def extract_dist_package(dist_file_path):
+    '''Extract dist package file to current directory.'''
     with tarfile.open(dist_file_path, 'r:gz') as tin:
         tin.extractall()
 
 
 def print_cursor():
+    '''Print test mode cursor.'''
     print('BotHub>', end=' ', flush=True)
 
 
 def make_event(message):
+    '''Make dummy event for test mode.'''
     return {
         'trigger': 'cli',
         'channel': 'cli',
@@ -69,12 +59,14 @@ def make_event(message):
 
 
 class Cli(object):
+    '''A CLI class represents '''
     def __init__(self, api=None, config=None, project_config=None):
         self.api = api or Api()
         self.config = config or Config()
         self.project_config = project_config or ProjectConfig()
 
     def load_auth(self):
+        '''Load auth token from bothub config and inject to API class'''
         self.config.load()
         self.api.load_auth(self.config)
 
@@ -103,18 +95,12 @@ class Cli(object):
                 return p['id']
         raise exc.NotFound('Such project {} is not found'.format(project_name))
 
-    def init(self, name, description, skel=True):
+    def init(self, name, description):
         self.load_auth()
         project = self.api.create_project(name, description)
         project_id = project['id']
-        project_name = project['name']
         programming_language = 'python3'
-        self.project_config.set('id', project_id)
-        self.project_config.set('name', project_name)
-        self.project_config.set('programming-language', programming_language)
-        self.project_config.save()
-        if skel:
-            PROJECT_STRUCTURE_HANDLERS[programming_language]()
+        self.api.upload_code(project_id, programming_language)
 
     def deploy(self):
         self.load_auth()
@@ -247,3 +233,26 @@ class Cli(object):
                 print_cursor()
                 line = sys.stdin.readline()
         print('\n')
+
+    def add_nlu(self, nlu, credentials):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        self.api.add_project_nlu(project_id, nlu, credentials)
+
+    def ls_nlus(self, verbose=False):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        nlus = self.api.get_project_nlus(project_id)
+        if verbose:
+            result = [[nlu['nlu'], nlu['credentials']] for nlu in nlus]
+        else:
+            result = [[nlu['nlu']] for nlu in nlus]
+        return result
+
+    def rm_nlu(self, nlu):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        self.api.delete_project_nlu(project_id, nlu)

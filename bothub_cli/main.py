@@ -44,7 +44,7 @@ def init():
         try:
             lib_cli = lib.Cli()
             _name = None
-            skel = True
+            clone_needed = True
             # if bothub.yml is exist, ask project_id is exists
             # if then, raise Duplicated
             # else, read bothub.yml and use parameters except project_id
@@ -55,15 +55,16 @@ def init():
                     raise exc.Duplicated('Project definition file [bothub.yml] is already exists')
                 except exc.NotFound:
                     print_error('bothub.yml is exist but not a valid project. Create the project again')
-                    _name = lib_cli.project_config.get('name')
-                    skel = False
+                    clone_needed = False
 
-            name = _name or click.prompt('Project name')
+            name = click.prompt('Project name')
             normalized_name = name.strip()
             if not normalized_name:
                 continue
             click.secho('Creating project...', fg='green')
-            lib_cli.init(normalized_name, '', skel)
+            lib_cli.init(normalized_name, '')
+            if clone_needed:
+                lib_cli.clone(normalized_name)
             click.secho('Created.', fg='green')
             break
         except exc.Cancel:
@@ -244,6 +245,54 @@ def rm_property(key):
     try:
         lib_cli = lib.Cli()
         lib_cli.rm_properties(key)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@cli.group()
+def nlu():
+    '''Manage project NLU integrations'''
+    pass
+
+
+@nlu.command(name='ls')
+@click.option('-l', '--long', count=True)
+def ls_nlu(long=False):
+    '''List NLU integrations'''
+    try:
+        lib_cli = lib.Cli()
+        nlus = lib_cli.ls_nlus(long)
+        header = ['nlu']
+        if long:
+            header.append('credentials')
+        data = [header] + nlus
+        table = Table(data)
+        click.secho(table.table)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@nlu.command(name='add')
+@click.argument('nlu')
+@click.option('--api-key')
+def add_nlu(nlu, api_key):
+    '''Add a NLU integration'''
+    try:
+        lib_cli = lib.Cli()
+        credentials = {}
+        add_option_to_dict(credentials, 'api_key', api_key)
+        lib_cli.add_nlu(nlu, credentials)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@nlu.command(name='rm')
+@click.argument('nlu')
+def rm_nlu(nlu):
+    '''Delete a NLU integration'''
+    try:
+        lib_cli = lib.Cli()
+        lib_cli.rm_nlu(nlu)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 

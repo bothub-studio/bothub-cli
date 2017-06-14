@@ -94,10 +94,12 @@ class Api(object):
         except exc.NotFound:
             raise exc.NotFound('Project {} is not exists.'.format(project_id))
 
-    def upload_code(self, project_id, language, code, dependency):
+    def upload_code(self, project_id, language, code=None, dependency=None):
         url = self.gen_url('projects', project_id, 'bot')
-        data = {'language': language, 'dependency': dependency}
-        files = {'code': code}
+        data = {'language': language}
+        if dependency:
+            data['dependency'] = dependency
+        files = {'code': code} if code else None
         headers = self.get_auth_headers()
         response = self.send_request(url, data=data, files=files, headers=headers, method='post')
         self.check_response(response)
@@ -161,6 +163,34 @@ class Api(object):
 
     def delete_project_property(self, project_id, key):
         url = self.gen_url('projects', project_id, 'properties', key)
+        headers = self.get_auth_headers()
+        response = self.send_request(url, headers=headers, method='delete')
+        self.check_response(response)
+
+    def add_project_nlu(self, project_id, nlu, credentials):
+        url = self.gen_url('projects', project_id, 'nlus')
+        data = {'credentials': credentials, 'nlu': nlu}
+        headers = self.get_auth_headers()
+        response = self.send_request(url, json=data, headers=headers, method='post')
+        self.check_response(response)
+        return response.json()['data']
+
+    def get_project_nlus(self, project_id):
+        url = self.gen_url('projects', project_id, 'nlus')
+        headers = self.get_auth_headers()
+        response = self.send_request(url, headers=headers)
+        self.check_response(response)
+        return response.json()['data']
+
+    def get_project_nlu(self, project_id, nlu):
+        url = self.gen_url('projects', project_id, 'nlus', nlu)
+        headers = self.get_auth_headers()
+        response = self.send_request(url, headers=headers)
+        self.check_response(response)
+        return response.json()['data']
+
+    def delete_project_nlu(self, project_id, nlu):
+        url = self.gen_url('projects', project_id, 'nlus', nlu)
         headers = self.get_auth_headers()
         response = self.send_request(url, headers=headers, method='delete')
         self.check_response(response)

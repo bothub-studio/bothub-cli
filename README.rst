@@ -111,11 +111,15 @@ Usage
 
    Commands:
      channel    Setup channels of current project
+     clone      Clone existing project
      configure  Setup credentials
      deploy     Deploy project
      init       Initialize project
      ls         List projects
+     nlu        Manage project NLU integrations
+     property   Manage project properties
      rm         Delete a project
+     test       Run test chat session
 
 
 Setup
@@ -138,6 +142,12 @@ Initialize project on current directory. Create a echo chatbot code.
    $ bothub init
 
 Deploy current project.
+
+.. code:: clone
+
+   $ bothub clone <project_name>
+
+Clone an existing project.
 
 .. code:: bash
 
@@ -176,6 +186,27 @@ Remove a channel from current project.
 .. code:: bash
 
    $ bothub channel rm <channel>
+
+NLU integration managemt
+------------------------
+
+List of NLU(Natural Language Understanding) integration for current project.
+
+.. code:: bash
+
+   $ bothub nlu ls
+
+Add a NLU integration for current project.
+
+.. code:: bash
+
+   $ bothub nlu add apiai --api-key=<api_key>
+
+Remove a NLU integration from current project.
+
+.. code:: bash
+
+   $ bothub nlu rm <nlu>
 
 
 Resources
