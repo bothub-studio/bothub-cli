@@ -15,12 +15,13 @@ from bothub_cli.config import Config
 from bothub_cli.config import ProjectConfig
 from bothub_cli import exceptions as exc
 from bothub_cli.utils import safe_mkdir
-from bothub_cli.utils import write_content_to_file
 from bothub_cli.utils import read_content_from_file
-from bothub_cli.template import code as bot_code
 
 
 def make_dist_package(dist_file_path):
+    '''Make dist package file of current project directory.
+    Includes all files of current dir, bothub dir and tests dir.
+    Dist file is compressed with tar+gzip.'''
     if os.path.isfile(dist_file_path):
         os.remove(dist_file_path)
 
@@ -33,15 +34,18 @@ def make_dist_package(dist_file_path):
 
 
 def extract_dist_package(dist_file_path):
+    '''Extract dist package file to current directory.'''
     with tarfile.open(dist_file_path, 'r:gz') as tin:
         tin.extractall()
 
 
 def print_cursor():
+    '''Print test mode cursor.'''
     print('BotHub>', end=' ', flush=True)
 
 
 def make_event(message):
+    '''Make dummy event for test mode.'''
     return {
         'trigger': 'cli',
         'channel': 'cli',
@@ -55,12 +59,14 @@ def make_event(message):
 
 
 class Cli(object):
+    '''A CLI class represents '''
     def __init__(self, api=None, config=None, project_config=None):
         self.api = api or Api()
         self.config = config or Config()
         self.project_config = project_config or ProjectConfig()
 
     def load_auth(self):
+        '''Load auth token from bothub config and inject to API class'''
         self.config.load()
         self.api.load_auth(self.config)
 
