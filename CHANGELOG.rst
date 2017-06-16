@@ -1,3 +1,12 @@
+0.1.8
+-----
+
+* regard value as a str when not valid JSON type
+* add location support for ``bothub test``
+* use readline for ``bothub test``
+* use production server property
+
+
 0.1.7
 -----
 
