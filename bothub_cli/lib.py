@@ -188,7 +188,7 @@ class Cli(object):
         try:
             _value = json.loads(value)
         except ValueError:
-            raise exc.InvalidValue('Not proper JSON type: {}'.format(value))
+            _value = value
 
         self.load_auth()
         self.project_config.load()
