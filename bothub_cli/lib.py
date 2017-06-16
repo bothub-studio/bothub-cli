@@ -6,16 +6,23 @@ import os
 import sys
 import json
 import tarfile
+import traceback
 
-from bothub_client.clients import ConsoleChannelClient
-from bothub_client.clients import LocMemStorageClient
+from six.moves import input
 
+from bothub_cli import exceptions as exc
 from bothub_cli.api import Api
 from bothub_cli.config import Config
 from bothub_cli.config import ProjectConfig
-from bothub_cli import exceptions as exc
+from bothub_cli.clients import ConsoleChannelClient
+from bothub_cli.clients import ExternalHttpStorageClient
 from bothub_cli.utils import safe_mkdir
 from bothub_cli.utils import read_content_from_file
+
+try:
+    __import__('readline')
+except ImportError:
+    pass
 
 
 def make_dist_package(dist_file_path):
@@ -39,23 +46,29 @@ def extract_dist_package(dist_file_path):
         tin.extractall()
 
 
-def print_cursor():
-    '''Print test mode cursor.'''
-    print('BotHub>', end=' ', flush=True)
-
-
 def make_event(message):
     '''Make dummy event for test mode.'''
-    return {
+    data = {
         'trigger': 'cli',
         'channel': 'cli',
         'sender': {
             'id': 'localuser',
             'name': 'Local user'
         },
-        'content': message,
         'raw_data': message
     }
+
+    if message.startswith('/location'):
+        _, latitude, longitude = message.split()
+        data['location'] = {
+            'latitude': latitude,
+            'longitude': longitude
+        }
+    elif message:
+        data['content'] = message
+
+    return data
+
 
 
 class Cli(object):
@@ -216,24 +229,19 @@ class Cli(object):
 
         mod = sys.modules['bothub.bot']
         channel_client = ConsoleChannelClient()
-        storage_client = LocMemStorageClient()
+        storage_client = ExternalHttpStorageClient(self.config.get('auth_token'), self.get_current_project_id())
         bot = mod.Bot(channel_client=channel_client, storage_client=storage_client)
 
-        print_cursor()
-        line = sys.stdin.readline().strip()
+        line = input('BotHub> ')
         while line:
             try:
-                _line = line.strip()
                 event = make_event(line)
                 context = {}
                 bot.handle_message(event, context)
-                print_cursor()
-                line = sys.stdin.readline().strip()
-            except Exception as ex:
-                print(ex)
-                print_cursor()
-                line = sys.stdin.readline()
-        print('\n')
+                line = input('BotHub> ')
+            except Exception:
+                traceback.print_exc()
+                line = input('BotHub> ')
 
     def add_nlu(self, nlu, credentials):
         self.load_auth()
