@@ -19,11 +19,6 @@ from bothub_cli.clients import ExternalHttpStorageClient
 from bothub_cli.utils import safe_mkdir
 from bothub_cli.utils import read_content_from_file
 
-try:
-    __import__('readline')
-except ImportError:
-    pass
-
 
 def make_dist_package(dist_file_path):
     '''Make dist package file of current project directory.
@@ -219,6 +214,13 @@ class Cli(object):
         self.project_config.load()
 
         try:
+            readline = __import__('readline')
+            if os.path.isfile('.history'):
+                readline.read_history_file('.history')
+        except ImportError:
+            pass
+
+        try:
             sys.path.append('.')
             __import__('bothub.bot')
         except ImportError:
@@ -242,6 +244,12 @@ class Cli(object):
             except Exception:
                 traceback.print_exc()
                 line = input('BotHub> ')
+
+        try:
+            readline = __import__('readline')
+            readline.write_history_file('.history')
+        except ImportError:
+            pass
 
     def add_nlu(self, nlu, credentials):
         self.load_auth()

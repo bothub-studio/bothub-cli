@@ -1,3 +1,9 @@
+0.1.10
+------
+
+* keep command history for ``bothub test``
+
+
 0.1.9
 -----
 
