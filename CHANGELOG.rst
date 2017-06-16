@@ -1,3 +1,9 @@
+0.1.9
+-----
+
+* handle a case no proper project found
+
+
 0.1.8
 -----
 
