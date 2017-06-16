@@ -18,7 +18,7 @@ with codecs.open(path.join(HERE, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='bothub-cli',
-    version='0.1.8',
+    version='0.1.9',
     description='A CLI tool for bothub.studio service',
     long_description=LONG_DESCRIPTION,
     author='Jeongsoo Park',
