@@ -19,12 +19,15 @@ class Config(object):
         _path = path or os.path.expanduser(os.path.join('~', '.bothub', 'config.yml'))
         path_list = _path if isinstance(_path, (list, tuple)) else [_path]
 
-        for p in path_list:
-            if os.path.isfile(p):
-                self.path = p
+        last_path = None
+
+        for path_candidate in path_list:
+            last_path = path_candidate
+            if os.path.isfile(path_candidate):
+                self.path = path_candidate
                 break
         if not self.path:
-            raise NotFound('Not found proper project config file: {}'.format(path))
+            self.path = last_path
 
         parent_dir = os.path.dirname(self.path)
         if len(parent_dir) > 0 and not os.path.isdir(parent_dir):
