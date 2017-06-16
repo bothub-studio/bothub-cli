@@ -220,14 +220,15 @@ class Cli(object):
         bot = mod.Bot(channel_client=channel_client, storage_client=storage_client)
 
         print_cursor()
-        line = sys.stdin.readline()
+        line = sys.stdin.readline().strip()
         while line:
             try:
+                _line = line.strip()
                 event = make_event(line)
                 context = {}
                 bot.handle_message(event, context)
                 print_cursor()
-                line = sys.stdin.readline()
+                line = sys.stdin.readline().strip()
             except Exception as ex:
                 print(ex)
                 print_cursor()
