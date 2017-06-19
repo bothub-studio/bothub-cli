@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 import os
 import sys
 import json
+import time
 import tarfile
 import traceback
 
@@ -110,7 +111,7 @@ class Cli(object):
         programming_language = 'python3'
         self.api.upload_code(project_id, programming_language)
 
-    def deploy(self):
+    def deploy(self, console=None):
         self.load_auth()
         self.project_config.load()
 
@@ -118,6 +119,8 @@ class Cli(object):
         dist_file_path = os.path.join('dist', 'bot.tgz')
         make_dist_package(dist_file_path)
 
+        if console:
+            console('Upload code')
         with open(dist_file_path, 'rb') as dist_file:
             dependency = read_content_from_file('requirements.txt') or 'bothub'
             project_id = self.get_current_project_id()
@@ -127,6 +130,19 @@ class Cli(object):
                 dist_file,
                 dependency
             )
+        if console:
+            console('Deploying', nl=False)
+        for _ in range(30):
+            project = self.api.get_project(project_id)
+            if project['status'] == 'online':
+                console('.')
+                return
+
+            if console:
+                console('.', nl=False)
+            time.sleep(1)
+        console('.')
+        raise exc.CliException('Deploy failed')
 
     def clone(self, project_name):
         project_id = self.get_project_id_with_name(project_name)

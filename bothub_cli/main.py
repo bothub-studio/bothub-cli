@@ -81,7 +81,7 @@ def deploy():
     '''Deploy project'''
     try:
         lib_cli = lib.Cli()
-        lib_cli.deploy()
+        lib_cli.deploy(console=click.echo)
         click.secho('Deployed.', fg='green')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')

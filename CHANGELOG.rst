@@ -2,6 +2,7 @@
 ------
 
 * add a ``logs`` command
+* watch deployment progress
 
 
 0.1.10
