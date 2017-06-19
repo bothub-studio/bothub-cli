@@ -1,14 +1,9 @@
-0.1.11
-------
-
-* add a ``logs`` command
-* watch deployment progress
-
-
 0.1.10
 ------
 
 * keep command history for ``bothub test``
+* add a ``logs`` command
+* watch deployment progress
 
 
 0.1.9
