@@ -143,7 +143,7 @@ Initialize project on current directory. Create a echo chatbot code.
 
 Deploy current project.
 
-.. code:: clone
+.. code:: bash
 
    $ bothub clone <project_name>
 
