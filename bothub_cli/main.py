@@ -3,6 +3,7 @@
 from __future__ import (absolute_import, division, print_function)
 
 import os
+import json
 import click
 from terminaltables import AsciiTable as Table
 
@@ -303,6 +304,19 @@ def test():
     try:
         lib_cli = lib.Cli()
         lib_cli.test()
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@cli.command(name='logs')
+def logs():
+    '''Show error logs'''
+    try:
+        lib_cli = lib.Cli()
+        log_entries = lib_cli.logs()
+        for log_entry in log_entries:
+            log_message = json.loads(log_entry['log'])
+            click.echo('{} {}\n{}'.format(log_entry['regdate'], log_message['error'], log_message['trace']))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 

@@ -194,3 +194,10 @@ class Api(object):
         headers = self.get_auth_headers()
         response = self.send_request(url, headers=headers, method='delete')
         self.check_response(response)
+
+    def get_project_execution_logs(self, project_id):
+        url = self.gen_url('projects', project_id, 'logs')
+        headers = self.get_auth_headers()
+        response = self.send_request(url, headers=headers)
+        self.check_response(response)
+        return response.json()['data']

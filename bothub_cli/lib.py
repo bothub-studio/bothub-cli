@@ -273,3 +273,10 @@ class Cli(object):
         self.project_config.load()
         project_id = self.get_current_project_id()
         self.api.delete_project_nlu(project_id, nlu)
+
+    def logs(self):
+        self.load_auth()
+        self.project_config.load()
+        project_id = self.get_current_project_id()
+        logs = self.api.get_project_execution_logs(project_id)
+        return sorted(logs, key=lambda x: x['regdate'])
