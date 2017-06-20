@@ -257,6 +257,8 @@ class Cli(object):
                 context = {}
                 bot.handle_message(event, context)
                 line = input('BotHub> ')
+            except EOFError:
+                break
             except Exception:
                 traceback.print_exc()
                 line = input('BotHub> ')
