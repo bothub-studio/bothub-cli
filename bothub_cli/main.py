@@ -6,6 +6,7 @@ import os
 import json
 import click
 from terminaltables import AsciiTable as Table
+from json import JSONDecodeError
 
 from bothub_cli import lib
 from bothub_cli import exceptions as exc
@@ -315,8 +316,12 @@ def logs():
         lib_cli = lib.Cli()
         log_entries = lib_cli.logs()
         for log_entry in log_entries:
-            log_message = json.loads(log_entry['log'])
-            click.echo('{} {}\n{}'.format(log_entry['regdate'], log_message['error'], log_message['trace']))
+            try:
+                log_dict = json.loads(log_entry['log'])
+                log_message = '{}\n{}'.format(log_dict['error'], log_dict['trace'])
+            except JSONDecodeError:
+                log_message = log_entry['log']
+            click.echo('{} {}'.format(log_entry['regdate'], log_message))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
