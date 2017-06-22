@@ -1,3 +1,12 @@
+0.1.11
+------
+
+* fix: handle EOF case in ``bothub test``
+* fix: consider plain log message case
+* fix: inject an event and context object for local NLU test
+* update README
+
+
 0.1.10
 ------
 
