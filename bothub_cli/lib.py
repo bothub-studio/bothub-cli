@@ -11,6 +11,8 @@ import traceback
 
 from six.moves import input
 
+from bothub_client.clients import NluClientFactory
+
 from bothub_cli import exceptions as exc
 from bothub_cli.api import Api
 from bothub_cli.config import Config
@@ -245,10 +247,23 @@ class Cli(object):
             else:
                 raise exc.ModuleLoadException('We found no valid bothub app on bothub/bot.py')
 
+        event = {
+            'sender': {
+                'id': '-1'
+            },
+            'channel': 'console'
+        }
+        context = {}
+
+        project_id = self.get_current_project_id()
+        nlus = self.api.get_project_nlus(project_id)
+        context['nlu'] = dict([(nlu['nlu'], nlu['credentials']) for nlu in nlus])
+
         mod = sys.modules['bothub.bot']
         channel_client = ConsoleChannelClient()
         storage_client = ExternalHttpStorageClient(self.config.get('auth_token'), self.get_current_project_id())
-        bot = mod.Bot(channel_client=channel_client, storage_client=storage_client)
+        nlu_client_factory = NluClientFactory(context)
+        bot = mod.Bot(channel_client=channel_client, storage_client=storage_client, nlu_client_factory=nlu_client_factory, event=event)
 
         line = input('BotHub> ')
         while line:
