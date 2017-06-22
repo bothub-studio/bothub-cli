@@ -115,6 +115,7 @@ Usage
      configure  Setup credentials
      deploy     Deploy project
      init       Initialize project
+     logs       Show error logs
      ls         List projects
      nlu        Manage project NLU integrations
      property   Manage project properties
@@ -165,6 +166,13 @@ Delete a project.
 
    $ bothub rm <project_name>
 
+Show error logs.
+
+.. code:: bash
+
+   $ bothub logs
+
+
 Channel management
 ------------------
 
@@ -187,6 +195,7 @@ Remove a channel from current project.
 
    $ bothub channel rm <channel>
 
+
 NLU integration managemt
 ------------------------
 
@@ -207,12 +216,6 @@ Remove a NLU integration from current project.
 .. code:: bash
 
    $ bothub nlu rm <nlu>
-
-
-Resources
-=========
-
-* Documentation (TBD)
 
 
 License
