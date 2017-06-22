@@ -35,7 +35,7 @@ setup(
         'requests',
         'pyyaml',
         'terminaltables',
-        'bothub>=0.1.6',
+        'bothub>=0.1.18',
     ],
     setup_requires=[
         'pytest-runner',
