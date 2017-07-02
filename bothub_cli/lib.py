@@ -161,9 +161,14 @@ class Cli(object):
         if os.path.isfile('code.tgz'):
             os.remove('code.tgz')
 
-    def ls(self):
+    def ls(self, verbose=False):
         self.load_auth()
-        return [[p['name']] for p in self.api.list_projects()]
+        projects = self.api.list_projects()
+        if verbose:
+            result = [[p['name'], p['status'], p['regdate']] for p in projects]
+        else:
+            result = [[p['name']] for p in projects]
+        return result
 
     def rm(self, name):
         self.load_auth()

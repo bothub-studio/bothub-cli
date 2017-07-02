@@ -101,12 +101,15 @@ def clone(project_name):
 
 
 @cli.command()
-def ls():
+@click.option('-l', '--long', count=True)
+def ls(long=False):
     '''List projects'''
     try:
         lib_cli = lib.Cli()
-        projects = lib_cli.ls()
+        projects = lib_cli.ls(long)
         header = ['project']
+        if long:
+            header += ['status', 'regdate']
         data = [header] + projects
         table = Table(data)
         click.secho(table.table)
