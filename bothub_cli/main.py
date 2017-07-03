@@ -54,7 +54,7 @@ def configure():
 @cli.command()
 def init():
     '''Initialize project'''
-    click.echo('Initialize a new project')
+    click.echo('Initialize a new project.')
     while True:
         try:
             lib_cli = lib.Cli()
@@ -67,7 +67,7 @@ def init():
                 try:
                     project_id = lib_cli.get_current_project_id()
                     lib_cli.get_project(project_id)
-                    raise exc.Duplicated('Project definition file [bothub.yml] is already exists')
+                    raise exc.Duplicated('Project definition file [bothub.yml] is already exists.')
                 except exc.NotFound:
                     print_error('bothub.yml is exist but not a valid project. Create the project again.')
                     clone_needed = False
@@ -83,7 +83,7 @@ def init():
             click.secho('Project has created.', fg='green')
             break
         except exc.Cancel:
-            print_error('Project creation has cancelled')
+            print_error('Project creation has cancelled.')
             break
         except exc.CliException as ex:
             print_error('{}: {}'.format(ex.__class__.__name__, ex))

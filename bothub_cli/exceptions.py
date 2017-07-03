@@ -17,25 +17,25 @@ class NotFound(CliException):
 
 class UserNotFound(NotFound):
     def __init__(self, username):
-        msg = "No such user: {}".format(username)
+        msg = "No such user: {}.".format(username)
         super(UserNotFound, self).__init__(msg)
 
 
 class ProjectIdNotFound(NotFound):
     def __init__(self, project_id):
-        msg = "No such project ID: {}".format(project_id)
+        msg = "No such project ID: {}.".format(project_id)
         super(ProjectIdNotFound, self).__init__(msg)
 
 
 class ProjectNameNotFound(NotFound):
     def __init__(self, project_name):
-        msg = "No such project name: {}".format(project_name)
+        msg = "No such project name: {}.".format(project_name)
         super(ProjectNameNotFound, self).__init__(msg)
 
 
 class AuthenticationFailed(InvalidCredential):
     def __init__(self):
-        msg = 'Invalid username or password'
+        msg = 'Invalid username or password.'
         super(AuthenticationFailed, self).__init__(msg)
 
 
@@ -70,7 +70,7 @@ class InvalidValue(CliException):
 
 class ModuleLoadException(CliException):
     def __init__(self):
-        msg = "Couldn't found a valid bothub app on bothub/bot.py"
+        msg = "Couldn't found a valid bothub app on bothub/bot.py."
         super(ModuleLoadException, self).__init__(msg)
 
 
@@ -81,7 +81,7 @@ class Timeout(CliException):
 class AuthTokenExpired(CliException):
     def __init__(self, msg=None):
         _msg = msg or "Login credentials have expired. "\
-               "Please try 'bothub configure' to refresh login credentials. "
+               "Please try 'bothub configure' to refresh login credentials."
         super(AuthTokenExpired, self).__init__(_msg)
 
 
@@ -94,7 +94,7 @@ class DeployFailed(CliException):
 class NotLatestVersion(CliException):
     def __init__(self, current_version, latest_version):
         msg = "New bothub-cli version has detected. You have {} and pypi has {}. "\
-              "Please upgrade the package: 'pip install --upgrade bothub-cli'".format(
+              "Please upgrade the package: 'pip install --upgrade bothub-cli'.".format(
                   current_version,
                   latest_version
               )
