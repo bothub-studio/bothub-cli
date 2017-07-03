@@ -4,11 +4,43 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 import os
 import re
+import time
+from datetime import datetime
+from datetime import timedelta
+import yaml
 import requests
 
 from bothub_cli import exceptions as exc
 
 PYPI_VERSION_PATTERN = re.compile(r'bothub_cli-(.+?)-py2.py3-none-any.whl')
+
+
+class Cache(object):
+    def __init__(self, path=None):
+        self.cache_path = path or os.path.expanduser(os.path.join('~', '.bothub', 'caches.yml'))
+
+    def get(self, key):
+        if not os.path.isfile(self.cache_path):
+            return None
+        content = read_content_from_file(self.cache_path)
+        cache_entry = yaml.load(content)
+        entry = cache_entry[key]
+        now = datetime.now()
+        if now > entry['expires']:
+            return None
+        return entry['value']
+
+    def set(self, key, value, ttl=3600):
+        if not os.path.isfile(self.cache_path):
+            cache_obj = {}
+        else:
+            content = read_content_from_file(self.cache_path)
+            cache_obj = yaml.load(content)
+        cache_entry = cache_obj.setdefault(key, {})
+        cache_entry['value'] = value
+        cache_entry['expires'] = datetime.now() + timedelta(seconds=ttl)
+        write_content_to_file(self.cache_path, yaml.dump(cache_obj, default_flow_style=False))
+
 
 def safe_mkdir(path):
     if not os.path.isdir(path):
@@ -48,9 +80,15 @@ def get_latest_version(versions):
 
 def get_latest_version_from_pypi():
     try:
+        cache = Cache()
+        latest_version = cache.get('latest_pypi_version')
+        if latest_version:
+            return latest_version
         response = requests.get('https://pypi.python.org/simple/bothub-cli', timeout=2)
         content = response.content.decode('utf8')
         versions = find_versions(content)
-        return get_latest_version(versions)
+        latest_version = get_latest_version(versions)
+        cache.set('latest_pypi_version', latest_version)
+        return latest_version
     except requests.exceptions.Timeout:
         raise exc.Timeout()
