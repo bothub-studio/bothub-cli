@@ -8,6 +8,7 @@ import click
 from terminaltables import AsciiTable as Table
 from json import JSONDecodeError
 
+from bothub_cli import __version__
 from bothub_cli import lib
 from bothub_cli import exceptions as exc
 
@@ -16,24 +17,36 @@ def print_error(msg):
     click.secho(msg, fg='red')
 
 
-@click.group()
-def cli():
+@click.group(invoke_without_command=True)
+@click.option('-V', '--version', is_flag=True, default=False)
+@click.pass_context
+def cli(ctx, version):
     '''Bothub is a command line tool that configure, init,
     and deploy bot codes to BotHub.Studio service'''
-    pass
+    try:
+        lib.check_latest_version()
+    except exc.NotLatestVersion as ex:
+        click.secho(str(ex), fg='yellow')
+
+    if version:
+        click.secho(__version__)
+        return
+
+    if ctx.invoked_subcommand is None:
+        print(ctx.get_help())
 
 
 @cli.command()
 def configure():
     '''Setup credentials'''
     try:
-        click.echo('Please enter your username/password to get auth token')
+        click.echo('Please enter your BotHut.Studio login credentials:')
         username = click.prompt('username')
         password = click.prompt('password', hide_input=True)
         click.secho('Connecting to server...', fg='green')
         lib_cli = lib.Cli()
         lib_cli.authenticate(username, password)
-        click.secho('Authorized', fg='green')
+        click.secho('Identified. Welcome {}.'.format(username), fg='green')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -41,7 +54,7 @@ def configure():
 @cli.command()
 def init():
     '''Initialize project'''
-    click.echo('Initialize a new project')
+    click.echo('Initialize a new project.')
     while True:
         try:
             lib_cli = lib.Cli()
@@ -54,9 +67,9 @@ def init():
                 try:
                     project_id = lib_cli.get_current_project_id()
                     lib_cli.get_project(project_id)
-                    raise exc.Duplicated('Project definition file [bothub.yml] is already exists')
+                    raise exc.Duplicated('Project definition file [bothub.yml] is already exists.')
                 except exc.NotFound:
-                    print_error('bothub.yml is exist but not a valid project. Create the project again')
+                    print_error('bothub.yml is exist but not a valid project. Create the project again.')
                     clone_needed = False
 
             name = click.prompt('Project name')
@@ -67,10 +80,10 @@ def init():
             lib_cli.init(normalized_name, '')
             if clone_needed:
                 lib_cli.clone(normalized_name)
-            click.secho('Created.', fg='green')
+            click.secho('Project has created.', fg='green')
             break
         except exc.Cancel:
-            print_error('Cancelled')
+            print_error('Project creation has cancelled.')
             break
         except exc.CliException as ex:
             print_error('{}: {}'.format(ex.__class__.__name__, ex))
@@ -83,7 +96,7 @@ def deploy():
     try:
         lib_cli = lib.Cli()
         lib_cli.deploy(console=click.echo)
-        click.secho('Deployed.', fg='green')
+        click.secho('Project is deployed.', fg='green')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -101,15 +114,19 @@ def clone(project_name):
 
 
 @cli.command()
-def ls():
+@click.option('-l', '--long', count=True)
+def ls(long=False):
     '''List projects'''
     try:
         lib_cli = lib.Cli()
-        projects = lib_cli.ls()
-        header = ['project']
+        projects = lib_cli.ls(long)
+        header = ['Project']
+        if long:
+            header += ['Status', 'Created']
         data = [header] + projects
         table = Table(data)
         click.secho(table.table)
+        click.secho('You have {} projects'.format(len(projects)))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -121,6 +138,7 @@ def rm(name):
     try:
         lib_cli = lib.Cli()
         lib_cli.rm(name)
+        click.secho('Deleted a project: {}'.format(name))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
     except ValueError as err:
@@ -154,6 +172,7 @@ def add_channel(channel, api_key, app_id, app_secret, page_access_token):
         add_option_to_dict(credentials, 'page_access_token', page_access_token)
         lib_cli = lib.Cli()
         lib_cli.add_channel(channel, credentials)
+        click.secho('Added a channel {}'.format(channel))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -165,9 +184,9 @@ def ls_channel(long=False):
     try:
         lib_cli = lib.Cli()
         channels = lib_cli.ls_channel(long)
-        header = ['channel']
+        header = ['Channel']
         if long:
-            header.append('credentials')
+            header.append('Credentials')
         data = [header] + channels
         table = Table(data)
         click.secho(table.table)
@@ -182,6 +201,7 @@ def rm_channel(channel):
     try:
         lib_cli = lib.Cli()
         lib_cli.rm_channel(channel)
+        click.secho('Deleted a channel: {}'.format(channel))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -224,6 +244,8 @@ def get_property(key):
             print_properties(result)
         else:
             click.echo('{}: {}'.format(key, result))
+    except KeyError:
+        click.secho('No such property: {}'.format(key), fg='red')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -236,6 +258,7 @@ def set_property(key, value):
     try:
         lib_cli = lib.Cli()
         lib_cli.set_properties(key, value)
+        click.secho("Set a property: {}".format(key))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -247,6 +270,7 @@ def rm_property(key):
     try:
         lib_cli = lib.Cli()
         lib_cli.rm_properties(key)
+        click.secho("Deleted a property: {}".format(key))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -264,9 +288,9 @@ def ls_nlu(long=False):
     try:
         lib_cli = lib.Cli()
         nlus = lib_cli.ls_nlus(long)
-        header = ['nlu']
+        header = ['NLU']
         if long:
-            header.append('credentials')
+            header.append('Credentials')
         data = [header] + nlus
         table = Table(data)
         click.secho(table.table)
@@ -284,6 +308,7 @@ def add_nlu(nlu, api_key):
         credentials = {}
         add_option_to_dict(credentials, 'api_key', api_key)
         lib_cli.add_nlu(nlu, credentials)
+        click.secho('Added a NLU: {}'.format(nlu))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -295,6 +320,7 @@ def rm_nlu(nlu):
     try:
         lib_cli = lib.Cli()
         lib_cli.rm_nlu(nlu)
+        click.secho('Deleted a NLU: {}'.format(nlu))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 

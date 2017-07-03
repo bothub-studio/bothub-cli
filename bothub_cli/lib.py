@@ -6,6 +6,7 @@ import os
 import sys
 import json
 import time
+import click
 import tarfile
 import traceback
 
@@ -13,6 +14,7 @@ from six.moves import input
 
 from bothub_client.clients import NluClientFactory
 
+from bothub_cli import __version__
 from bothub_cli import exceptions as exc
 from bothub_cli.api import Api
 from bothub_cli.config import Config
@@ -21,6 +23,8 @@ from bothub_cli.clients import ConsoleChannelClient
 from bothub_cli.clients import ExternalHttpStorageClient
 from bothub_cli.utils import safe_mkdir
 from bothub_cli.utils import read_content_from_file
+from bothub_cli.utils import get_latest_version_from_pypi
+from bothub_cli.utils import cmp_versions
 
 
 def make_dist_package(dist_file_path):
@@ -68,6 +72,20 @@ def make_event(message):
     return data
 
 
+def is_latest_version():
+    pypi_version = get_latest_version_from_pypi()
+    return (cmp_versions(__version__, pypi_version) >= 0, pypi_version)
+
+
+def check_latest_version():
+    try:
+        is_latest, pypi_version = is_latest_version()
+        if not is_latest:
+            raise exc.NotLatestVersion(__version__, pypi_version)
+
+    except exc.Timeout:
+        pass
+
 
 class Cli(object):
     '''A CLI class represents '''
@@ -85,8 +103,7 @@ class Cli(object):
         self.project_config.load()
         project_id = self.project_config.get('id')
         if not project_id:
-            raise exc.ImproperlyConfigured("Invalid project directory. "
-                                           "Did you run 'bothub init' for current directory before?")
+            raise exc.ImproperlyConfigured()
         return project_id
 
     def get_project(self, project_id):
@@ -104,7 +121,7 @@ class Cli(object):
         for p in projects:
             if p['name'] == project_name:
                 return p['id']
-        raise exc.NotFound('Such project {} is not found'.format(project_name))
+        raise exc.ProjectNameNotFound(project_name)
 
     def init(self, name, description):
         self.load_auth()
@@ -144,7 +161,7 @@ class Cli(object):
                 console('.', nl=False)
             time.sleep(1)
         console('.')
-        raise exc.CliException('Deploy failed')
+        raise exc.DeployFailed()
 
     def clone(self, project_name):
         project_id = self.get_project_id_with_name(project_name)
@@ -161,16 +178,21 @@ class Cli(object):
         if os.path.isfile('code.tgz'):
             os.remove('code.tgz')
 
-    def ls(self):
+    def ls(self, verbose=False):
         self.load_auth()
-        return [[p['name']] for p in self.api.list_projects()]
+        projects = self.api.list_projects()
+        if verbose:
+            result = [[p['name'], p['status'], p['regdate']] for p in projects]
+        else:
+            result = [[p['name']] for p in projects]
+        return result
 
     def rm(self, name):
         self.load_auth()
         projects = self.api.list_projects()
         _projects = [p for p in projects if p['name'] == name]
         if not _projects:
-            raise exc.NotFound('No such project: {}'.format(name))
+            raise exc.ProjectNameNotFound(name)
         for project in _projects:
             self.api.delete_project(project['id'])
 
@@ -208,7 +230,7 @@ class Cli(object):
         self.project_config.load()
         project_id = self.get_current_project_id()
         data = self.api.get_project_property(project_id)
-        return data.get(key)
+        return data[key]
 
     def set_properties(self, key, value):
         try:
@@ -245,7 +267,7 @@ class Cli(object):
             if sys.exc_info()[-1].tb_next:
                 raise
             else:
-                raise exc.ModuleLoadException('We found no valid bothub app on bothub/bot.py')
+                raise exc.ModuleLoadException()
 
         event = {
             'sender': {
@@ -261,9 +283,17 @@ class Cli(object):
 
         mod = sys.modules['bothub.bot']
         channel_client = ConsoleChannelClient()
-        storage_client = ExternalHttpStorageClient(self.config.get('auth_token'), self.get_current_project_id())
+        storage_client = ExternalHttpStorageClient(
+            self.config.get('auth_token'),
+            self.get_current_project_id()
+        )
         nlu_client_factory = NluClientFactory(context)
-        bot = mod.Bot(channel_client=channel_client, storage_client=storage_client, nlu_client_factory=nlu_client_factory, event=event)
+        bot = mod.Bot(
+            channel_client=channel_client,
+            storage_client=storage_client,
+            nlu_client_factory=nlu_client_factory,
+            event=event
+        )
 
         line = input('BotHub> ')
         while line:

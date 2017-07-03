@@ -6,7 +6,7 @@ import os
 import codecs
 
 import yaml
-from .exceptions import NotFound
+from bothub_cli import exceptions as exc
 
 from six.moves.configparser import ConfigParser
 
@@ -34,8 +34,11 @@ class Config(object):
             os.makedirs(parent_dir)
 
     def load(self):
-        with open(self.path) as fin:
-            self.config = yaml.load(fin)
+        try:
+            with open(self.path) as fin:
+                self.config = yaml.load(fin)
+        except IOError:
+            raise exc.ImproperlyConfigured()
 
     def save(self):
         with codecs.open(self.path, 'wb', encoding='utf8') as fout:

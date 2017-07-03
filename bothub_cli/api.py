@@ -3,8 +3,12 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
 import os
+import time
+from datetime import datetime
+
 import click
 import requests
+import jwt
 from bothub_cli import exceptions as exc
 
 
@@ -26,6 +30,12 @@ class Api(object):
     def load_auth(self, config):
         self.auth_token = config.get('auth_token')
 
+    def check_auth_token_expired(self):
+        content = jwt.decode(self.auth_token, verify=False)
+        now_timestamp = int(time.mktime(datetime.utcnow().timetuple()))
+        if now_timestamp > content['exp']:
+            raise exc.AuthTokenExpired()
+
     def gen_url(self, *args):
         return '{}/{}'.format(self.base_url, '/'.join([str(arg) for arg in args]))
 
@@ -38,12 +48,14 @@ class Api(object):
         if not self.auth_token:
             raise exc.NoCredential()
 
+        self.check_auth_token_expired()
+
     def check_response(self, response):
         if response.status_code // 100 in [2, 3]:
             return
 
         if response.status_code == 401:
-            raise exc.InvalidCredential("Authentication is failed. Try 'bothub configure' to login again: {}".format(self.get_response_cause(response)))
+            raise exc.InvalidCredential("Authentication is failed. Try 'bothub configure' to verify login credentials: {}".format(self.get_response_cause(response)))
 
         if response.status_code == 404:
             raise exc.NotFound('Resource not found: {}'.format(self.get_response_cause(response)))
@@ -59,10 +71,10 @@ class Api(object):
         response = self.send_request(url, data, method='post')
 
         if response.status_code == 404:
-            raise exc.NotFound('No such user {}'.format(username))
+            raise exc.UserNotFound(username)
 
         if response.status_code == 401:
-            raise exc.InvalidCredential('Invalid username/password')
+            raise exc.AuthenticationFailed()
 
         self.check_response(response)
         response_dict = response.json()['data']
@@ -82,7 +94,7 @@ class Api(object):
             self.check_response(response)
             return response.json()['data']
         except exc.Duplicated:
-            raise exc.Duplicated('Project name already exists. Please use other name')
+            raise exc.ProjectNameDuplicated(name)
 
     def get_project(self, project_id):
         try:
@@ -92,7 +104,7 @@ class Api(object):
             self.check_response(response)
             return response.json()['data']
         except exc.NotFound:
-            raise exc.NotFound('Project {} is not exists.'.format(project_id))
+            raise exc.ProjectIdNotFound(project_id)
 
     def upload_code(self, project_id, language, code=None, dependency=None):
         url = self.gen_url('projects', project_id, 'bot')
