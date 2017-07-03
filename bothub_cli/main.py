@@ -40,7 +40,7 @@ def cli(ctx, version):
 def configure():
     '''Setup credentials'''
     try:
-        click.echo('Please enter your BotHut.Studio username/password:')
+        click.echo('Please enter your BotHut.Studio login credentials:')
         username = click.prompt('username')
         password = click.prompt('password', hide_input=True)
         click.secho('Connecting to server...', fg='green')
