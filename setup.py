@@ -34,6 +34,7 @@ setup(
         'click',
         'requests',
         'pyyaml',
+        'pyjwt',
         'terminaltables',
         'bothub>=0.1.18',
     ],

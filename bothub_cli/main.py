@@ -23,7 +23,10 @@ def print_error(msg):
 def cli(ctx, version):
     '''Bothub is a command line tool that configure, init,
     and deploy bot codes to BotHub.Studio service'''
-    lib.check_latest_version()
+    try:
+        lib.check_latest_version()
+    except exc.NotLatestVersion as ex:
+        click.secho(str(ex), fg='yellow')
 
     if version:
         click.secho(__version__)
@@ -37,13 +40,13 @@ def cli(ctx, version):
 def configure():
     '''Setup credentials'''
     try:
-        click.echo('Please enter your username/password to get auth token')
+        click.echo('Please enter your BotHut.Studio username/password:')
         username = click.prompt('username')
         password = click.prompt('password', hide_input=True)
         click.secho('Connecting to server...', fg='green')
         lib_cli = lib.Cli()
         lib_cli.authenticate(username, password)
-        click.secho('Authorized', fg='green')
+        click.secho('Identified. Welcome {}.'.format(username), fg='green')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -66,7 +69,7 @@ def init():
                     lib_cli.get_project(project_id)
                     raise exc.Duplicated('Project definition file [bothub.yml] is already exists')
                 except exc.NotFound:
-                    print_error('bothub.yml is exist but not a valid project. Create the project again')
+                    print_error('bothub.yml is exist but not a valid project. Create the project again.')
                     clone_needed = False
 
             name = click.prompt('Project name')
@@ -77,10 +80,10 @@ def init():
             lib_cli.init(normalized_name, '')
             if clone_needed:
                 lib_cli.clone(normalized_name)
-            click.secho('Created.', fg='green')
+            click.secho('Project has created.', fg='green')
             break
         except exc.Cancel:
-            print_error('Cancelled')
+            print_error('Project creation has cancelled')
             break
         except exc.CliException as ex:
             print_error('{}: {}'.format(ex.__class__.__name__, ex))
@@ -93,7 +96,7 @@ def deploy():
     try:
         lib_cli = lib.Cli()
         lib_cli.deploy(console=click.echo)
-        click.secho('Deployed.', fg='green')
+        click.secho('Project is deployed.', fg='green')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -117,9 +120,9 @@ def ls(long=False):
     try:
         lib_cli = lib.Cli()
         projects = lib_cli.ls(long)
-        header = ['project']
+        header = ['Project']
         if long:
-            header += ['status', 'regdate']
+            header += ['Status', 'Created']
         data = [header] + projects
         table = Table(data)
         click.secho(table.table)
@@ -178,9 +181,9 @@ def ls_channel(long=False):
     try:
         lib_cli = lib.Cli()
         channels = lib_cli.ls_channel(long)
-        header = ['channel']
+        header = ['Channel']
         if long:
-            header.append('credentials')
+            header.append('Credentials')
         data = [header] + channels
         table = Table(data)
         click.secho(table.table)
@@ -277,9 +280,9 @@ def ls_nlu(long=False):
     try:
         lib_cli = lib.Cli()
         nlus = lib_cli.ls_nlus(long)
-        header = ['nlu']
+        header = ['NLU']
         if long:
-            header.append('credentials')
+            header.append('Credentials')
         data = [header] + nlus
         table = Table(data)
         click.secho(table.table)

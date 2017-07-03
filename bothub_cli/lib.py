@@ -81,8 +81,8 @@ def check_latest_version():
     try:
         is_latest, pypi_version = is_latest_version()
         if not is_latest:
-            click.secho("New bothub-cli version has detected. You have {} and pypi has {}.".format(__version__, pypi_version), fg='yellow')
-            click.secho("Please upgrade the package: 'pip install --upgrade bothub-cli'", fg='yellow')
+            raise exc.NotLatestVersion(__version__, pypi_version)
+
     except exc.Timeout:
         pass
 
@@ -103,8 +103,7 @@ class Cli(object):
         self.project_config.load()
         project_id = self.project_config.get('id')
         if not project_id:
-            raise exc.ImproperlyConfigured("Invalid project directory. "
-                                           "Did you run 'bothub init' for current directory before?")
+            raise exc.ImproperlyConfigured()
         return project_id
 
     def get_project(self, project_id):
@@ -122,7 +121,7 @@ class Cli(object):
         for p in projects:
             if p['name'] == project_name:
                 return p['id']
-        raise exc.NotFound('Such project {} is not found'.format(project_name))
+        raise exc.ProjectNameNotFound(project_name)
 
     def init(self, name, description):
         self.load_auth()
@@ -162,7 +161,7 @@ class Cli(object):
                 console('.', nl=False)
             time.sleep(1)
         console('.')
-        raise exc.CliException('Deploy failed')
+        raise exc.DeployFailed()
 
     def clone(self, project_name):
         project_id = self.get_project_id_with_name(project_name)
@@ -193,7 +192,7 @@ class Cli(object):
         projects = self.api.list_projects()
         _projects = [p for p in projects if p['name'] == name]
         if not _projects:
-            raise exc.NotFound('No such project: {}'.format(name))
+            raise exc.ProjectNameNotFound(name)
         for project in _projects:
             self.api.delete_project(project['id'])
 
@@ -268,7 +267,7 @@ class Cli(object):
             if sys.exc_info()[-1].tb_next:
                 raise
             else:
-                raise exc.ModuleLoadException('We found no valid bothub app on bothub/bot.py')
+                raise exc.ModuleLoadException()
 
         event = {
             'sender': {
@@ -284,9 +283,17 @@ class Cli(object):
 
         mod = sys.modules['bothub.bot']
         channel_client = ConsoleChannelClient()
-        storage_client = ExternalHttpStorageClient(self.config.get('auth_token'), self.get_current_project_id())
+        storage_client = ExternalHttpStorageClient(
+            self.config.get('auth_token'),
+            self.get_current_project_id()
+        )
         nlu_client_factory = NluClientFactory(context)
-        bot = mod.Bot(channel_client=channel_client, storage_client=storage_client, nlu_client_factory=nlu_client_factory, event=event)
+        bot = mod.Bot(
+            channel_client=channel_client,
+            storage_client=storage_client,
+            nlu_client_factory=nlu_client_factory,
+            event=event
+        )
 
         line = input('BotHub> ')
         while line:

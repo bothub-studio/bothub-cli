@@ -4,6 +4,8 @@
 * add: -l option for ``bothub ls``
 * add: --version option
 * add: check latest version
+* add: check auth token expiration
+* tune messages
 
 
 0.1.11
