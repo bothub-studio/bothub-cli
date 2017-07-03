@@ -126,6 +126,7 @@ def ls(long=False):
         data = [header] + projects
         table = Table(data)
         click.secho(table.table)
+        click.secho('You have {} projects'.format(len(projects)))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -137,6 +138,7 @@ def rm(name):
     try:
         lib_cli = lib.Cli()
         lib_cli.rm(name)
+        click.secho('Deleted a project: {}'.format(name))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
     except ValueError as err:
@@ -170,6 +172,7 @@ def add_channel(channel, api_key, app_id, app_secret, page_access_token):
         add_option_to_dict(credentials, 'page_access_token', page_access_token)
         lib_cli = lib.Cli()
         lib_cli.add_channel(channel, credentials)
+        click.secho('Added a channel {}'.format(channel))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -198,6 +201,7 @@ def rm_channel(channel):
     try:
         lib_cli = lib.Cli()
         lib_cli.rm_channel(channel)
+        click.secho('Deleted a channel: {}'.format(channel))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -240,6 +244,8 @@ def get_property(key):
             print_properties(result)
         else:
             click.echo('{}: {}'.format(key, result))
+    except KeyError:
+        click.secho('No such property: {}'.format(key), fg='red')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -252,6 +258,7 @@ def set_property(key, value):
     try:
         lib_cli = lib.Cli()
         lib_cli.set_properties(key, value)
+        click.secho("Set a property: {}".format(key))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -263,6 +270,7 @@ def rm_property(key):
     try:
         lib_cli = lib.Cli()
         lib_cli.rm_properties(key)
+        click.secho("Deleted a property: {}".format(key))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -300,6 +308,7 @@ def add_nlu(nlu, api_key):
         credentials = {}
         add_option_to_dict(credentials, 'api_key', api_key)
         lib_cli.add_nlu(nlu, credentials)
+        click.secho('Added a NLU: {}'.format(nlu))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -311,6 +320,7 @@ def rm_nlu(nlu):
     try:
         lib_cli = lib.Cli()
         lib_cli.rm_nlu(nlu)
+        click.secho('Deleted a NLU: {}'.format(nlu))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
