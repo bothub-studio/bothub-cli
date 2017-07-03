@@ -230,7 +230,7 @@ class Cli(object):
         self.project_config.load()
         project_id = self.get_current_project_id()
         data = self.api.get_project_property(project_id)
-        return data.get(key)
+        return data[key]
 
     def set_properties(self, key, value):
         try:
