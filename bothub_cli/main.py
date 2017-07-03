@@ -8,6 +8,7 @@ import click
 from terminaltables import AsciiTable as Table
 from json import JSONDecodeError
 
+from bothub_cli import __version__
 from bothub_cli import lib
 from bothub_cli import exceptions as exc
 
@@ -16,11 +17,20 @@ def print_error(msg):
     click.secho(msg, fg='red')
 
 
-@click.group()
-def cli():
+@click.group(invoke_without_command=True)
+@click.option('-V', '--version', is_flag=True, default=False)
+@click.pass_context
+def cli(ctx, version):
     '''Bothub is a command line tool that configure, init,
     and deploy bot codes to BotHub.Studio service'''
-    pass
+    lib.check_latest_version()
+
+    if version:
+        click.secho(__version__)
+        return
+
+    if ctx.invoked_subcommand is None:
+        print(ctx.get_help())
 
 
 @cli.command()

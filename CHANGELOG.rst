@@ -2,6 +2,8 @@
 ------
 
 * add: -l option for ``bothub ls``
+* add: --version option
+* add: check latest version
 
 
 0.1.11

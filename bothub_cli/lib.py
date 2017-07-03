@@ -6,6 +6,7 @@ import os
 import sys
 import json
 import time
+import click
 import tarfile
 import traceback
 
@@ -13,6 +14,7 @@ from six.moves import input
 
 from bothub_client.clients import NluClientFactory
 
+from bothub_cli import __version__
 from bothub_cli import exceptions as exc
 from bothub_cli.api import Api
 from bothub_cli.config import Config
@@ -21,6 +23,8 @@ from bothub_cli.clients import ConsoleChannelClient
 from bothub_cli.clients import ExternalHttpStorageClient
 from bothub_cli.utils import safe_mkdir
 from bothub_cli.utils import read_content_from_file
+from bothub_cli.utils import get_latest_version_from_pypi
+from bothub_cli.utils import cmp_versions
 
 
 def make_dist_package(dist_file_path):
@@ -67,6 +71,20 @@ def make_event(message):
 
     return data
 
+
+def is_latest_version():
+    pypi_version = get_latest_version_from_pypi()
+    return (cmp_versions(__version__, pypi_version) >= 0, pypi_version)
+
+
+def check_latest_version():
+    try:
+        is_latest, pypi_version = is_latest_version()
+        if not is_latest:
+            click.secho("New bothub-cli version has detected. You have {} and pypi has {}.".format(__version__, pypi_version), fg='yellow')
+            click.secho("Please upgrade the package: 'pip install --upgrade bothub-cli'", fg='yellow')
+    except exc.Timeout:
+        pass
 
 
 class Cli(object):
