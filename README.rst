@@ -172,6 +172,11 @@ Show error logs.
 
    $ bothub logs
 
+Run current project on local machine for test.
+
+.. code:: bash
+   $ bothub test
+
 
 Channel management
 ------------------
