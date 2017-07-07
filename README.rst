@@ -70,7 +70,7 @@ Edit bot.py below for your purpose.
        BaseBot superclass have methods belows:
    
        * Send message
-         * self.send_message(message, user_id=None, channel=None)
+         * self.send_message(message, chat_id=None, channel=None)
        * Data Storage
          * self.set_project_data(data)
          * self.get_project_data()
