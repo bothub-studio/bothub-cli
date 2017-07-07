@@ -18,12 +18,17 @@ PYPI_VERSION_PATTERN = re.compile(r'bothub_cli-(.+?)-py2.py3-none-any.whl')
 class Cache(object):
     def __init__(self, path=None):
         self.cache_path = path or os.path.expanduser(os.path.join('~', '.bothub', 'caches.yml'))
+        parent_path = os.path.dirname()
+        if not os.path.isdir(parent_path):
+            os.makedirs(parent_path)
 
     def get(self, key):
         if not os.path.isfile(self.cache_path):
             return None
         content = read_content_from_file(self.cache_path)
         cache_entry = yaml.load(content)
+        if not cache_entry:
+            return None
         entry = cache_entry[key]
         now = datetime.now()
         if now > entry['expires']:
@@ -36,6 +41,8 @@ class Cache(object):
         else:
             content = read_content_from_file(self.cache_path)
             cache_obj = yaml.load(content)
+            if not cache_obj:
+                cache_obj = {}
         cache_entry = cache_obj.setdefault(key, {})
         cache_entry['value'] = value
         cache_entry['expires'] = datetime.now() + timedelta(seconds=ttl)
