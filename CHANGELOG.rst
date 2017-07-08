@@ -1,3 +1,9 @@
+0.1.14
+------
+
+* hotfix: error with os.path.dirname
+
+
 0.1.13
 ------
 
