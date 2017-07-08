@@ -18,7 +18,7 @@ PYPI_VERSION_PATTERN = re.compile(r'bothub_cli-(.+?)-py2.py3-none-any.whl')
 class Cache(object):
     def __init__(self, path=None):
         self.cache_path = path or os.path.expanduser(os.path.join('~', '.bothub', 'caches.yml'))
-        parent_path = os.path.dirname()
+        parent_path = os.path.dirname(self.cache_path)
         if not os.path.isdir(parent_path):
             os.makedirs(parent_path)
 
