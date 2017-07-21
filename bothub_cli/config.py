@@ -53,5 +53,5 @@ class Config(object):
 
 
 class ProjectConfig(Config):
-    def __init__(self, path=['bothub.yml', 'bothub.yaml']):
+    def __init__(self, path=('bothub.yml', 'bothub.yaml')):
         super(ProjectConfig, self).__init__(path)
