@@ -3,6 +3,7 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
 import os
+import shutil
 
 from bothub_cli import lib
 from bothub_cli.api import Api
@@ -25,25 +26,35 @@ def record_project(transport):
     transport.record(response)
 
 
+def record_upload_code(transport):
+    data = {'data': {}}
+    response = MockResponse(data)
+    transport.record(response)
+
+
 def fixture_api():
     transport = MockTransport()
     api = Api(transport=transport)
     return transport, api
 
 
-def fixture_config():
-    path = os.path.join('test_result', 'test_lib_config.yml')
-    if os.path.isfile(path):
-        os.remove(path)
-    config = Config(path)
+def fixture_config(path=None):
+    if path:
+        return Config(path)
+    _path = os.path.join('test_result', 'test_lib_config.yml')
+    if os.path.isfile(_path):
+        os.remove(_path)
+    config = Config(_path)
     return config
 
 
-def fixture_project_config():
-    path = os.path.join('test_result', 'test_lib_project_config.yml')
-    if os.path.isfile(path):
-        os.remove(path)
-    config = ProjectConfig(path)
+def fixture_project_config(path=None):
+    if path:
+        return ProjectConfig(path)
+    _path = os.path.join('test_result', 'test_lib_project_config.yml')
+    if os.path.isfile(_path):
+        os.remove(_path)
+    config = ProjectConfig(_path)
     return config
     
 
@@ -59,9 +70,14 @@ def test_authenticate_should_save_config_file():
 def test_init_should_save_config_file():
     transport, api = fixture_api()
     record_project(transport)
+    record_upload_code(transport)
     config = fixture_config()
     config.set('auth_token', 'testtoken')
     config.save()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
     project_config = fixture_project_config()
     lib_cli = lib.Cli(project_config=project_config, api=api, config=config)
     lib_cli.init('testproject', '')

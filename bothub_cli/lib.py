@@ -129,6 +129,10 @@ class Cli(object):
         project_id = project['id']
         programming_language = 'python3'
         self.api.upload_code(project_id, programming_language)
+        self.project_config.set('id', project_id)
+        self.project_config.set('name', name)
+        self.project_config.set('programming-language', programming_language)
+        self.project_config.save()
 
     def deploy(self, console=None):
         self.load_auth()
