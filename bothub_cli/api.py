@@ -12,12 +12,12 @@ import jwt
 from bothub_cli import exceptions as exc
 
 
-BASE_URL = os.environ.get('BOTHUB_API_BASE_URL', 'https://api.bothub.studio/api')
 
 
 class Api(object):
     def __init__(self, base_url=None, transport=None, auth_token=None):
-        self.base_url = base_url or BASE_URL
+        env_base_url = os.environ.get('BOTHUB_API_BASE_URL', 'https://api.bothub.studio/api')
+        self.base_url = base_url or env_base_url
         self.transport = transport or requests
         self.auth_token = auth_token
 
