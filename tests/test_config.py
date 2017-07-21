@@ -9,7 +9,7 @@ from bothub_cli.config import Config
 
 
 def fixture_config(filename='test.yml'):
-    shutil.rmtree('test_result')
+    shutil.rmtree('test_result', ignore_errors=True)
     config = Config(os.path.join('test_result', filename))
     return config
 
