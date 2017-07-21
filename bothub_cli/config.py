@@ -16,20 +16,29 @@ class Config(object):
 
     def __init__(self, path=None):
         self.config = {}
-        _path = path or os.path.expanduser(os.path.join('~', '.bothub', 'config.yml'))
-        path_list = _path if isinstance(_path, (list, tuple)) else [_path]
+        self.path = Config.determine_path(path)
 
-        last_path = None
+    @staticmethod
+    def determine_path(path):
+        # if path is not list, make sure parent dir exists and return
+        if isinstance(path, str):
+            Config.make_parent_dir(path)
+            return path
 
-        for path_candidate in path_list:
-            last_path = path_candidate
-            if os.path.isfile(path_candidate):
-                self.path = path_candidate
-                break
-        if not self.path:
-            self.path = last_path
+        # if path is list or tuple, iterate to lookup existing path,
+        # if not found, try to make empty one with first entry
+        if isinstance(path, (list, tuple)):
+            for path_candidate in path:
+                if os.path.isfile(path_candidate):
+                    return path_candidate
 
-        parent_dir = os.path.dirname(self.path)
+            non_exists_path = path[0]
+            Config.make_parent_dir(non_exists_path)
+            return non_exists_path
+
+    @staticmethod
+    def make_parent_dir(path):
+        parent_dir = os.path.dirname(path)
         if len(parent_dir) > 0 and not os.path.isdir(parent_dir):
             os.makedirs(parent_dir)
 
