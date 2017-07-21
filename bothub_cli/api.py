@@ -31,6 +31,10 @@ class Api(object):
         self.auth_token = config.get('auth_token')
 
     def check_auth_token_expired(self):
+        env_debug_mode = os.environ.get('BOTHUB_DEBUG', False)
+        if env_debug_mode:
+            return
+
         content = jwt.decode(self.auth_token, verify=False)
         now_timestamp = int(time.mktime(datetime.utcnow().timetuple()))
         if now_timestamp > content['exp']:

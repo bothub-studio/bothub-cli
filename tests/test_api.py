@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import os
 from bothub_cli.api import Api
 from .testutils import MockResponse
 from .testutils import MockTransport
 
 
 def fixture_api():
+    os.environ['BOTHUB_DEBUG'] = 'true'
     transport = MockTransport()
     api = Api(transport=transport)
     config = {'auth_token': 'testtoken'}
