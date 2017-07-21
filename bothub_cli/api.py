@@ -16,7 +16,8 @@ from bothub_cli import exceptions as exc
 
 class Api(object):
     def __init__(self, base_url=None, transport=None, auth_token=None):
-        env_base_url = os.environ.get('BOTHUB_API_BASE_URL', 'https://api.bothub.studio/api')
+        env_base_url = os.environ.get('BOTHUB_API_BASE_URL',
+                                      'https://api.bothub.studio/api')
         self.base_url = base_url or env_base_url
         self.transport = transport or requests
         self.auth_token = auth_token
@@ -59,10 +60,14 @@ class Api(object):
             return
 
         if response.status_code == 401:
-            raise exc.InvalidCredential("Authentication is failed. Try 'bothub configure' to verify login credentials: {}".format(self.get_response_cause(response)))
+            raise exc.InvalidCredential(
+                "Authentication is failed. "\
+                "Try 'bothub configure' to verify login credentials: {}"\
+                .format(self.get_response_cause(response)))
 
         if response.status_code == 404:
-            raise exc.NotFound('Resource not found: {}'.format(self.get_response_cause(response)))
+            raise exc.NotFound('Resource not found: {}'\
+                               .format(self.get_response_cause(response)))
 
         if response.status_code == 409:
             raise exc.Duplicated(self.get_response_cause(response))
@@ -117,7 +122,9 @@ class Api(object):
             data['dependency'] = dependency
         files = {'code': code} if code else None
         headers = self.get_auth_headers()
-        response = self.send_request(url, data=data, files=files, headers=headers, method='post')
+        response = self.send_request(
+            url, data=data, files=files, headers=headers, method='post'
+        )
         self.check_response(response)
         return response.json()['data']
 
@@ -166,7 +173,9 @@ class Api(object):
         url = self.gen_url('projects', project_id, 'properties')
         headers = self.get_auth_headers()
         data = {key: value}
-        response = self.send_request(url, json={'data': data}, headers=headers, method='post')
+        response = self.send_request(
+            url, json={'data': data}, headers=headers, method='post'
+        )
         self.check_response(response)
         return response.json()['data']
 
