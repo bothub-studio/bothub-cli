@@ -9,6 +9,7 @@ from datetime import datetime
 from datetime import timedelta
 import yaml
 import requests
+import tarfile
 
 from bothub_cli import __version__
 from bothub_cli import exceptions as exc
@@ -143,3 +144,37 @@ def extract_dist_package(dist_file_path):
     '''Extract dist package file to current directory.'''
     with tarfile.open(dist_file_path, 'r:gz') as tin:
         tin.extractall()
+
+
+def make_event(message):
+    '''Make dummy event for test mode.'''
+    data = {
+        'trigger': 'cli',
+        'channel': 'cli',
+        'sender': {
+            'id': 'localuser',
+            'name': 'Local user'
+        },
+        'raw_data': message
+    }
+
+    if message.startswith('/location'):
+        _, latitude, longitude = message.split()
+        data['location'] = {
+            'latitude': latitude,
+            'longitude': longitude
+        }
+    elif message:
+        data['content'] = message
+
+    return data
+
+
+def tabulate_dict(lst, *fields):
+    result = [None] * len(lst)
+    for row_idx, row in enumerate(lst):
+        row_result = [None] * len(fields)
+        for col_idx, field in enumerate(fields):
+            row_result[col_idx] = row[field]
+        result[row_idx] = row_result
+    return result

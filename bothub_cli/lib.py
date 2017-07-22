@@ -20,35 +20,10 @@ from bothub_cli.clients import ConsoleChannelClient
 from bothub_cli.clients import ExternalHttpStorageClient
 from bothub_cli.utils import safe_mkdir
 from bothub_cli.utils import read_content_from_file
-from bothub_cli.utils import get_latest_version_from_pypi
-from bothub_cli.utils import cmp_versions
-from bothub_cli.utils import is_latest_version
 from bothub_cli.utils import make_dist_package
 from bothub_cli.utils import extract_dist_package
-
-
-def make_event(message):
-    '''Make dummy event for test mode.'''
-    data = {
-        'trigger': 'cli',
-        'channel': 'cli',
-        'sender': {
-            'id': 'localuser',
-            'name': 'Local user'
-        },
-        'raw_data': message
-    }
-
-    if message.startswith('/location'):
-        _, latitude, longitude = message.split()
-        data['location'] = {
-            'latitude': latitude,
-            'longitude': longitude
-        }
-    elif message:
-        data['content'] = message
-
-    return data
+from bothub_cli.utils import make_event
+from bothub_cli.utils import tabulate_dict
 
 
 class Cli(object):
@@ -58,37 +33,13 @@ class Cli(object):
         self.config = config or Config()
         self.project_config = project_config or ProjectConfig()
 
-    def load_auth(self):
-        '''Load auth token from bothub config and inject to API class'''
-        self.config.load()
-        self.api.load_auth(self.config)
-
-    def get_current_project_id(self):
-        self.project_config.load()
-        project_id = self.project_config.get('id')
-        if not project_id:
-            raise exc.ImproperlyConfigured()
-        return project_id
-
-    def get_project(self, project_id):
-        self.load_auth()
-        return self.api.get_project(project_id)
-
     def authenticate(self, username, password):
         token = self.api.authenticate(username, password)
         self.config.set('auth_token', token)
         self.config.save()
 
-    def get_project_id_with_name(self, project_name):
-        self.load_auth()
-        projects = self.api.list_projects()
-        for p in projects:
-            if p['name'] == project_name:
-                return p['id']
-        raise exc.ProjectNameNotFound(project_name)
-
     def init(self, name, description):
-        self.load_auth()
+        self._load_auth()
         project = self.api.create_project(name, description)
         project_id = project['id']
         programming_language = 'python3'
@@ -98,8 +49,28 @@ class Cli(object):
         self.project_config.set('programming-language', programming_language)
         self.project_config.save()
 
+    def get_project(self, project_id):
+        self._load_auth()
+        return self.api.get_project(project_id)
+
+    def ls(self, verbose=False):
+        self._load_auth()
+        projects = self.api.list_projects()
+        args = ('name',) if not verbose else ('name', 'status', 'regdate')
+        result = tabulate_dict(projects, *args)
+        return result
+
+    def rm(self, name):
+        self._load_auth()
+        projects = self.api.list_projects()
+        _projects = [p for p in projects if p['name'] == name]
+        if not _projects:
+            raise exc.ProjectNameNotFound(name)
+        for project in _projects:
+            self.api.delete_project(project['id'])
+
     def deploy(self, console=None):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
 
         safe_mkdir('dist')
@@ -110,30 +81,18 @@ class Cli(object):
             console('Upload code')
         with open(dist_file_path, 'rb') as dist_file:
             dependency = read_content_from_file('requirements.txt') or 'bothub'
-            project_id = self.get_current_project_id()
+            project_id = self._get_current_project_id()
             self.api.upload_code(
                 project_id,
                 self.project_config.get('programming-language'),
                 dist_file,
                 dependency
             )
-        if console:
-            console('Deploying', nl=False)
-        for _ in range(30):
-            project = self.api.get_project(project_id)
-            if project['status'] == 'online':
-                console('.')
-                return
-
-            if console:
-                console('.', nl=False)
-            time.sleep(1)
-        console('.')
-        raise exc.DeployFailed()
+        self._wait_deploy_completion(project_id, console)
 
     def clone(self, project_name):
-        project_id = self.get_project_id_with_name(project_name)
-        self.load_auth()
+        project_id = self._get_project_id_with_name(project_name)
+        self._load_auth()
 
         response = self.api.get_code(project_id)
         code = response['code']
@@ -146,57 +105,37 @@ class Cli(object):
         if os.path.isfile('code.tgz'):
             os.remove('code.tgz')
 
-    def ls(self, verbose=False):
-        self.load_auth()
-        projects = self.api.list_projects()
-        if verbose:
-            result = [[p['name'], p['status'], p['regdate']] for p in projects]
-        else:
-            result = [[p['name']] for p in projects]
-        return result
-
-    def rm(self, name):
-        self.load_auth()
-        projects = self.api.list_projects()
-        _projects = [p for p in projects if p['name'] == name]
-        if not _projects:
-            raise exc.ProjectNameNotFound(name)
-        for project in _projects:
-            self.api.delete_project(project['id'])
-
     def add_channel(self, channel, credentials):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         self.api.add_project_channel(project_id, channel, credentials)
 
     def ls_channel(self, verbose=False):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         channels = self.api.get_project_channels(project_id)
-        if verbose:
-            result = [[c['channel'], c['credentials']] for c in channels]
-        else:
-            result = [[c['channel']] for c in channels]
+        args = ('channels',) if not verbose else ('channel', 'credentials')
+        result = tabulate_dict(channels, *args)
         return result
 
     def rm_channel(self, channel):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         self.api.delete_project_channels(project_id, channel)
 
     def ls_properties(self):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         return self.api.get_project_property(project_id)
 
     def get_properties(self, key):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         data = self.api.get_project_property(project_id)
         return data[key]
 
@@ -206,19 +145,19 @@ class Cli(object):
         except ValueError:
             _value = value
 
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         return self.api.set_project_property(project_id, key, _value)
 
     def rm_properties(self, key):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         self.api.delete_project_property(project_id, key)
 
     def test(self):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
 
         try:
@@ -245,7 +184,7 @@ class Cli(object):
         }
         context = {}
 
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         nlus = self.api.get_project_nlus(project_id)
         context['nlu'] = dict([(nlu['nlu'], nlu['credentials']) for nlu in nlus])
 
@@ -253,7 +192,7 @@ class Cli(object):
         channel_client = ConsoleChannelClient()
         storage_client = ExternalHttpStorageClient(
             self.config.get('auth_token'),
-            self.get_current_project_id()
+            self._get_current_project_id()
         )
         nlu_client_factory = NluClientFactory(context)
         bot = mod.Bot(
@@ -283,31 +222,64 @@ class Cli(object):
             pass
 
     def add_nlu(self, nlu, credentials):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         self.api.add_project_nlu(project_id, nlu, credentials)
 
     def ls_nlus(self, verbose=False):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         nlus = self.api.get_project_nlus(project_id)
-        if verbose:
-            result = [[nlu['nlu'], nlu['credentials']] for nlu in nlus]
-        else:
-            result = [[nlu['nlu']] for nlu in nlus]
+        args = ('nlu',) if not verbose else ('nlu', 'credentials')
+        result = tabulate_dict(nlus, *args)
         return result
 
     def rm_nlu(self, nlu):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         self.api.delete_project_nlu(project_id, nlu)
 
     def logs(self):
-        self.load_auth()
+        self._load_auth()
         self.project_config.load()
-        project_id = self.get_current_project_id()
+        project_id = self._get_current_project_id()
         logs = self.api.get_project_execution_logs(project_id)
         return sorted(logs, key=lambda x: x['regdate'])
+
+    def _load_auth(self):
+        '''Load auth token from bothub config and inject to API class'''
+        self.config.load()
+        self.api.load_auth(self.config)
+
+    def _get_current_project_id(self):
+        self.project_config.load()
+        project_id = self.project_config.get('id')
+        if not project_id:
+            raise exc.ImproperlyConfigured()
+        return project_id
+
+    def _get_project_id_with_name(self, project_name):
+        self._load_auth()
+        projects = self.api.list_projects()
+        for p in projects:
+            if p['name'] == project_name:
+                return p['id']
+        raise exc.ProjectNameNotFound(project_name)
+
+    def _wait_deploy_completion(self, project_id, console):
+        if console:
+            console('Deploying', nl=False)
+        for _ in range(30):
+            project = self.api.get_project(project_id)
+            if project['status'] == 'online':
+                console('.')
+                return
+
+            if console:
+                console('.', nl=False)
+            time.sleep(1)
+        console('.')
+        raise exc.DeployFailed()
