@@ -69,13 +69,13 @@ class Cli(object):
         for project in _projects:
             self.api.delete_project(project['id'])
 
-    def deploy(self, console=None):
+    def deploy(self, console=None, source_dir='.'):
         self._load_auth()
         self.project_config.load()
 
         safe_mkdir('dist')
         dist_file_path = os.path.join('dist', 'bot.tgz')
-        make_dist_package(dist_file_path)
+        make_dist_package(dist_file_path, source_dir)
 
         if console:
             console('Upload code')

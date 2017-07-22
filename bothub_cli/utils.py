@@ -125,7 +125,7 @@ def timestamp(dt=None):
     return int(time.mktime(dt.timetuple()))
 
 
-def make_dist_package(dist_file_path):
+def make_dist_package(dist_file_path, source_dir='.'):
     '''Make dist package file of current project directory.
     Includes all files of current dir, bothub dir and tests dir.
     Dist file is compressed with tar+gzip.'''
@@ -133,7 +133,7 @@ def make_dist_package(dist_file_path):
         os.remove(dist_file_path)
 
     with tarfile.open(dist_file_path, 'w:gz') as tout:
-        for fname in os.listdir('.'):
+        for fname in os.listdir(source_dir):
             if os.path.isfile(fname):
                 tout.add(fname)
             elif os.path.isdir(fname) and fname in ['bothub', 'tests']:
