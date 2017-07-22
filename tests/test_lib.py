@@ -12,6 +12,7 @@ from bothub_cli import exceptions as exc
 from bothub_cli.api import Api
 from bothub_cli.config import Config
 from bothub_cli.config import ProjectConfig
+from bothub_cli.utils import make_dist_package
 
 from .testutils import MockResponse
 from .testutils import MockTransport
@@ -180,3 +181,33 @@ def test_rm_shoud_raise_not_found():
         cli.rm('myfourthbot')
         executed = api.executed.pop(0)
         assert executed == ('list_project', )
+
+
+def test_deploy_should_execute_upload_api():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+
+    api.responses.append(True)
+    api.responses.append({
+        'id': 3,
+        'name': 'WeatherBot',
+        'status': 'online',
+        'regdate': '0000-00-00 00:00:00'
+    })
+
+    source_dir = os.path.join('fixtures', 'code')
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    cli.deploy(source_dir=source_dir)
+
+    tar_path = os.path.join('test_result', 'bot.tgz')
+    make_dist_package(tar_path, source_dir=source_dir)
+    with open(tar_path, 'rb') as fin:
+        tar_content = fin.read()
+
+    executed = api.executed.pop(0)
+    assert executed == ('upload_code', 3, 'python3', tar_content, 'bothub')

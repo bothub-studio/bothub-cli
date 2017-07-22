@@ -56,3 +56,7 @@ class MockApi(object):
     def delete_project(self, name):
         self.executed.append(('delete_project', name))
         return self.responses.pop(0)
+
+    def upload_code(self, project_id, language, dist_file, dependency):
+        self.executed.append(('upload_code', project_id, language, dist_file.read(), dependency))
+        return self.responses.pop(0)
