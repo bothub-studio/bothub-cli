@@ -5,7 +5,10 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 import os
 import shutil
 
+import pytest
+
 from bothub_cli import lib
+from bothub_cli import exceptions as exc
 from bothub_cli.api import Api
 from bothub_cli.config import Config
 from bothub_cli.config import ProjectConfig
@@ -35,8 +38,8 @@ def record_upload_code(transport):
 
 def record_api_projects(api):
     api.responses.append([
-        {'name': 'myfirstbot', 'status': 'online', 'regdate': '0000-00-00 00:00:00'},
-        {'name': 'mysecondbot', 'status': 'online', 'regdate': '0000-00-00 00:00:00'},
+        {'id': 10, 'name': 'myfirstbot', 'status': 'online', 'regdate': '0000-00-00 00:00:00'},
+        {'id': 20, 'name': 'mysecondbot', 'status': 'online', 'regdate': '0000-00-00 00:00:00'},
     ])
 
 
@@ -145,3 +148,35 @@ def test_ls_should_return_project_list_detail():
         ['myfirstbot', 'online', '0000-00-00 00:00:00'],
         ['mysecondbot', 'online', '0000-00-00 00:00:00'],
     ]
+
+
+def test_rm_shoud_execute_delete_api():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+
+    record_api_projects(api)
+    api.responses.append(True)
+
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    cli.rm('myfirstbot')
+    executed = api.executed.pop(0)
+    assert executed == ('list_project', )
+    executed2 = api.executed.pop(0)
+    assert executed2 == ('delete_project', 10)
+
+
+def test_rm_shoud_raise_not_found():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+
+    record_api_projects(api)
+    api.responses.append(True)
+
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+
+    with pytest.raises(exc.ProjectNameNotFound):
+        cli.rm('myfourthbot')
+        executed = api.executed.pop(0)
+        assert executed == ('list_project', )

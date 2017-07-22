@@ -44,11 +44,15 @@ class MockApi(object):
 
     def get_project(self, project_id):
         self.executed.append(('get_project', project_id))
-        return self.responses.pop()
+        return self.responses.pop(0)
 
     def load_auth(self, config):
         pass
 
     def list_projects(self):
         self.executed.append(('list_project', ))
-        return self.responses.pop()
+        return self.responses.pop(0)
+
+    def delete_project(self, name):
+        self.executed.append(('delete_project', name))
+        return self.responses.pop(0)
