@@ -14,7 +14,6 @@ from six.moves import input
 
 from bothub_client.clients import NluClientFactory
 
-from bothub_cli import __version__
 from bothub_cli import exceptions as exc
 from bothub_cli.api import Api
 from bothub_cli.config import Config
@@ -25,27 +24,9 @@ from bothub_cli.utils import safe_mkdir
 from bothub_cli.utils import read_content_from_file
 from bothub_cli.utils import get_latest_version_from_pypi
 from bothub_cli.utils import cmp_versions
-
-
-def make_dist_package(dist_file_path):
-    '''Make dist package file of current project directory.
-    Includes all files of current dir, bothub dir and tests dir.
-    Dist file is compressed with tar+gzip.'''
-    if os.path.isfile(dist_file_path):
-        os.remove(dist_file_path)
-
-    with tarfile.open(dist_file_path, 'w:gz') as tout:
-        for fname in os.listdir('.'):
-            if os.path.isfile(fname):
-                tout.add(fname)
-            elif os.path.isdir(fname) and fname in ['bothub', 'tests']:
-                tout.add(fname)
-
-
-def extract_dist_package(dist_file_path):
-    '''Extract dist package file to current directory.'''
-    with tarfile.open(dist_file_path, 'r:gz') as tin:
-        tin.extractall()
+from bothub_cli.utils import is_latest_version
+from bothub_cli.utils import make_dist_package
+from bothub_cli.utils import extract_dist_package
 
 
 def make_event(message):
@@ -70,21 +51,6 @@ def make_event(message):
         data['content'] = message
 
     return data
-
-
-def is_latest_version():
-    pypi_version = get_latest_version_from_pypi()
-    return (cmp_versions(__version__, pypi_version) >= 0, pypi_version)
-
-
-def check_latest_version():
-    try:
-        is_latest, pypi_version = is_latest_version()
-        if not is_latest:
-            raise exc.NotLatestVersion(__version__, pypi_version)
-
-    except exc.Timeout:
-        pass
 
 
 class Cli(object):

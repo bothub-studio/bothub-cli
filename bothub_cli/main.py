@@ -10,6 +10,7 @@ from json import JSONDecodeError
 
 from bothub_cli import __version__
 from bothub_cli import lib
+from bothub_cli import utils
 from bothub_cli import exceptions as exc
 
 
@@ -24,7 +25,7 @@ def cli(ctx, version):
     '''Bothub is a command line tool that configure, init,
     and deploy bot codes to BotHub.Studio service'''
     try:
-        lib.check_latest_version()
+        utils.check_latest_version()
     except exc.NotLatestVersion as ex:
         click.secho(str(ex), fg='yellow')
 
