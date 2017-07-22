@@ -5,19 +5,27 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 class MockTransport(object):
     def __init__(self):
-        self.buf = []
+        self.response = []
+        self.called = []
 
     def record(self, data):
-        self.buf.append(data)
+        self.response.append(data)
 
     def post(self, *args, **kwargs):
-        return self.buf.pop(0)
+        self.called.append(('post', args, kwargs))
+        return self.response.pop(0)
 
     def get(self, *args, **kwargs):
-        return self.buf.pop(0)
+        self.called.append(('get', args, kwargs))
+        return self.response.pop(0)
 
     def put(self, *args, **kwargs):
-        return self.buf.pop(0)
+        self.called.append(('put', args, kwargs))
+        return self.response.pop(0)
+
+    def delete(self, *args, **kwargs):
+        self.called.append(('delete', args, kwargs))
+        return self.response.pop(0)
 
 
 class MockResponse(object):
@@ -27,5 +35,3 @@ class MockResponse(object):
 
     def json(self):
         return self.body
-
-

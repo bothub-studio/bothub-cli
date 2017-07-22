@@ -34,7 +34,7 @@ def record_upload_code(transport):
 
 def fixture_api():
     transport = MockTransport()
-    api = Api(transport=transport)
+    api = Api(transport=transport, verify_token_expire=False)
     return transport, api
 
 
