@@ -275,11 +275,11 @@ class Cli(object):
         for _ in range(30):
             project = self.api.get_project(project_id)
             if project['status'] == 'online':
-                console('.')
+                if console:
+                    console('.')
                 return
 
             if console:
                 console('.', nl=False)
             time.sleep(1)
-        console('.')
         raise exc.DeployFailed()
