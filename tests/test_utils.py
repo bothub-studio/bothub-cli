@@ -139,3 +139,17 @@ def test_get_latest_version_from_pypi_should_return_a_version():
 
 def test_timestamp_should_return_int():
     assert isinstance(utils.timestamp(), int)
+
+
+def test_tabulate_dict_should_destructure_dict():
+    data = [
+        {'name': 'abcd', 'age': 10, 'score': 3.3},
+        {'name': 'what', 'age': 13, 'score': 4.3},
+        {'name': 'cold', 'age': 11, 'score': 5.3},
+    ]
+
+    assert utils.tabulate_dict(data, 'age', 'score') == [
+        [10, 3.3],
+        [13, 4.3],
+        [11, 5.3]
+    ]

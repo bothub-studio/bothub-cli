@@ -35,3 +35,20 @@ class MockResponse(object):
 
     def json(self):
         return self.body
+
+
+class MockApi(object):
+    def __init__(self):
+        self.executed = []
+        self.responses = []
+
+    def get_project(self, project_id):
+        self.executed.append(('get_project', project_id))
+        return self.responses.pop()
+
+    def load_auth(self, config):
+        pass
+
+    def list_projects(self):
+        self.executed.append(('list_project', ))
+        return self.responses.pop()
