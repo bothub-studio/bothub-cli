@@ -99,3 +99,8 @@ def get_latest_version_from_pypi():
         return latest_version
     except requests.exceptions.Timeout:
         raise exc.Timeout()
+
+
+def timestamp(dt=None):
+    dt = dt or datetime.utcnow()
+    return int(time.mktime(dt.timetuple()))
