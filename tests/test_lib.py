@@ -112,7 +112,7 @@ def test_get_project_should_execute_api_get_project():
     assert executed == ('get_project', 1)
 
 
-def test_ls_project_should_return_project_list():
+def test_ls_should_return_project_list():
     api = MockApi()
     config = fixture_config()
     project_config = fixture_project_config()
@@ -129,7 +129,7 @@ def test_ls_project_should_return_project_list():
     ]
 
 
-def test_ls_project_should_return_project_list_detail():
+def test_ls_should_return_project_list_detail():
     api = MockApi()
     config = fixture_config()
     project_config = fixture_project_config()
