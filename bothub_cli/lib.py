@@ -6,8 +6,6 @@ import os
 import sys
 import json
 import time
-import click
-import tarfile
 import traceback
 
 from six.moves import input

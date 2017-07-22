@@ -7,7 +7,6 @@ import time
 import logging
 from datetime import datetime
 
-import click
 import requests
 import jwt
 from bothub_cli import exceptions as exc
