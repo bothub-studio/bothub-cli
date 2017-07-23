@@ -19,6 +19,10 @@ from .testutils import MockTransport
 from .testutils import MockApi
 
 
+def teardown_function():
+    shutil.rmtree('test_result', ignore_errors=True)
+
+
 def record_auth_token(transport):
     data = {'data': {'access_token': 'testtoken'}}
     response = MockResponse(data)
@@ -211,3 +215,32 @@ def test_deploy_should_execute_upload_api():
 
     executed = api.executed.pop(0)
     assert executed == ('upload_code', 3, 'python3', tar_content, 'bothub')
+
+
+def test_clone_should_extract_code():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append([{
+        'id': 3,
+        'name': 'WeatherBot',
+        'status': 'online',
+        'regdate': '0000-00-00 00:00:00'
+    }])
+    with open(os.path.join('fixtures', 'bot.tgz'), 'rb') as fin:
+        code = fin.read()
+    api.responses.append({
+        'code': str(code)
+    })
+
+    target_dir = os.path.join('test_result', 'clone_result')
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    cli.clone('WeatherBot', target_dir)
+
+    assert os.path.isdir(os.path.join('test_result', 'clone_result')) is True
+    assert os.path.isdir(os.path.join('test_result', 'clone_result', 'code')) is True
+    assert os.path.isfile(os.path.join('test_result', 'clone_result', 'code', 'sourcefile.txt')) is True

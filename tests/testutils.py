@@ -60,3 +60,7 @@ class MockApi(object):
     def upload_code(self, project_id, language, dist_file, dependency):
         self.executed.append(('upload_code', project_id, language, dist_file.read(), dependency))
         return self.responses.pop(0)
+
+    def get_code(self, project_id):
+        self.executed.append(('get_code', project_id))
+        return self.responses.pop(0)
