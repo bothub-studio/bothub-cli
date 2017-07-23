@@ -121,7 +121,7 @@ class Cli(object):
         self.project_config.load()
         project_id = self._get_current_project_id()
         channels = self.api.get_project_channels(project_id)
-        args = ('channels',) if not verbose else ('channel', 'credentials')
+        args = ('channel',) if not verbose else ('channel', 'credentials')
         result = tabulate_dict(channels, *args)
         return result
 
