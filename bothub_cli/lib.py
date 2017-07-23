@@ -90,7 +90,12 @@ class Cli(object):
             )
         self._wait_deploy_completion(project_id, console)
 
-    def clone(self, project_name):
+    def clone(self, project_name, target_dir=None):
+        _target_dir = target_dir or project_name
+
+        if os.path.isdir(_target_dir):
+            raise exc.TargetDirectoryDuplicated(_target_dir)
+
         project_id = self._get_project_id_with_name(project_name)
         self._load_auth()
 
@@ -101,7 +106,7 @@ class Cli(object):
         with open('code.tgz', 'wb') as code_file:
             code_file.write(code_byte)
 
-        extract_dist_package('code.tgz')
+        extract_dist_package('code.tgz', _target_dir)
         if os.path.isfile('code.tgz'):
             os.remove('code.tgz')
 

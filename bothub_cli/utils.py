@@ -140,10 +140,12 @@ def make_dist_package(dist_file_path, source_dir='.'):
                 tout.add(fname)
 
 
-def extract_dist_package(dist_file_path):
+def extract_dist_package(dist_file_path, target_dir=None):
     '''Extract dist package file to current directory.'''
+    _target_dir = target_dir or '.'
+
     with tarfile.open(dist_file_path, 'r:gz') as tin:
-        tin.extractall()
+        tin.extractall(_target_dir)
 
 
 def make_event(message):
