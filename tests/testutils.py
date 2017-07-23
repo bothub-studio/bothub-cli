@@ -64,3 +64,15 @@ class MockApi(object):
     def get_code(self, project_id):
         self.executed.append(('get_code', project_id))
         return self.responses.pop(0)
+
+    def add_project_channel(self, project_id, channel, credentials):
+        self.executed.append(('add_project_channel', project_id, channel, credentials))
+        return self.responses.pop(0)
+
+    def delete_project_channels(self, project_id, channel):
+        self.executed.append(('delete_project_channel', project_id, channel))
+        return self.responses.pop(0)
+
+    def get_project_channels(self, project_id):
+        self.executed.append(('get_project_channels', project_id))
+        return self.responses.pop(0)

@@ -48,6 +48,13 @@ def record_api_projects(api):
     ])
 
 
+def record_api_channels(api):
+    api.responses.append([
+        {'id': 1, 'channel': 'myfirstchannel', 'credentials': {'api-key': 'myfirstkey'}},
+        {'id': 2, 'channel': 'mychannel', 'credentials': {'api-key': 'myhiddenkey'}},
+    ])
+
+
 def fixture_api():
     transport = MockTransport()
     api = Api(transport=transport, verify_token_expire=False)
@@ -244,3 +251,51 @@ def test_clone_should_extract_code():
     assert os.path.isdir(os.path.join('test_result', 'clone_result')) is True
     assert os.path.isdir(os.path.join('test_result', 'clone_result', 'code')) is True
     assert os.path.isfile(os.path.join('test_result', 'clone_result', 'code', 'sourcefile.txt')) is True
+
+
+def test_add_channel_should_execute_api_call():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append(True)
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    cli.add_channel('mychannel', {'api-key': 'mykey'})
+
+    executed = api.executed.pop(0)
+    assert executed == ('add_project_channel', 3, 'mychannel', {'api-key': 'mykey'})
+
+
+def test_ls_channel_should_execute_api_call():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    record_api_channels(api)
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    cli.ls_channel()
+
+    executed = api.executed.pop(0)
+    assert executed == ('get_project_channels', 3)
+
+
+def test_rm_channel_should_execute_api_call():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append(True)
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    cli.rm_channel('mychannel')
+
+    executed = api.executed.pop(0)
+    assert executed == ('delete_project_channel', 3, 'mychannel')
