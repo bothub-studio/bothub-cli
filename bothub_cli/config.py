@@ -73,5 +73,5 @@ class ProjectConfig(ConfigBase):
 
 
 class ProjectMeta(ConfigBase):
-    def __init__(self, path=os.path.join('.bothub', 'meta.yml')):
+    def __init__(self, path=os.path.join('.bothub-meta', 'meta.yml')):
         super(ProjectMeta, self).__init__(path)
