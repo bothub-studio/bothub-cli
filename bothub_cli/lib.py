@@ -24,6 +24,9 @@ from bothub_cli.utils import make_dist_package
 from bothub_cli.utils import extract_dist_package
 from bothub_cli.utils import make_event
 from bothub_cli.utils import tabulate_dict
+from bothub_cli.utils import get_bot_class
+from bothub_cli.utils import load_readline
+from bothub_cli.utils import close_readline
 
 
 class Cli(object):
@@ -164,48 +167,10 @@ class Cli(object):
     def test(self):
         self._load_auth()
         self.project_config.load()
-
-        try:
-            readline = __import__('readline')
-            if os.path.isfile('.history'):
-                readline.read_history_file('.history')
-        except ImportError:
-            pass
-
-        try:
-            sys.path.append('.')
-            __import__('bothub.bot')
-        except ImportError:
-            if sys.exc_info()[-1].tb_next:
-                raise
-            else:
-                raise exc.ModuleLoadException()
-
-        event = {
-            'sender': {
-                'id': '-1'
-            },
-            'channel': 'console'
-        }
-        context = {}
+        load_readline()
 
         project_id = self._get_current_project_id()
-        nlus = self.api.get_project_nlus(project_id)
-        context['nlu'] = dict([(nlu['nlu'], nlu['credentials']) for nlu in nlus])
-
-        mod = sys.modules['bothub.bot']
-        channel_client = ConsoleChannelClient()
-        storage_client = ExternalHttpStorageClient(
-            self.config.get('auth_token'),
-            self._get_current_project_id()
-        )
-        nlu_client_factory = NluClientFactory(context)
-        bot = mod.Bot(
-            channel_client=channel_client,
-            storage_client=storage_client,
-            nlu_client_factory=nlu_client_factory,
-            event=event
-        )
+        bot = self._load_bot(project_id)
 
         line = input('BotHub> ')
         while line:
@@ -220,11 +185,7 @@ class Cli(object):
                 traceback.print_exc()
                 line = input('BotHub> ')
 
-        try:
-            readline = __import__('readline')
-            readline.write_history_file('.history')
-        except ImportError:
-            pass
+        close_readline()
 
     def add_nlu(self, nlu, credentials):
         self._load_auth()
@@ -288,3 +249,29 @@ class Cli(object):
                 console('.', nl=False)
             time.sleep(1)
         raise exc.DeployFailed()
+
+    def _load_bot(self, project_id):
+        event = {
+            'sender': {
+                'id': '-1'
+            },
+            'channel': 'console'
+        }
+        context = {}
+        nlus = self.api.get_project_nlus(project_id)
+        context['nlu'] = dict([(nlu['nlu'], nlu['credentials']) for nlu in nlus])
+
+        channel_client = ConsoleChannelClient()
+        storage_client = ExternalHttpStorageClient(
+            self.config.get('auth_token'),
+            self._get_current_project_id()
+        )
+        nlu_client_factory = NluClientFactory(context)
+        bot_class = get_bot_class()
+        bot = bot_class(
+            channel_client=channel_client,
+            storage_client=storage_client,
+            nlu_client_factory=nlu_client_factory,
+            event=event
+        )
+        return bot

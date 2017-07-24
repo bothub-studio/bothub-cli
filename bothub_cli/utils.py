@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 import os
 import re
+import sys
 import time
 from datetime import datetime
 from datetime import timedelta
@@ -180,3 +181,35 @@ def tabulate_dict(lst, *fields):
             row_result[col_idx] = row[field]
         result[row_idx] = row_result
     return result
+
+
+def get_bot_class():
+    try:
+        sys.path.append('.')
+        __import__('bothub.bot')
+        mod = sys.modules['bothub.bot']
+        return mod.Bot
+    except ImportError:
+        if sys.exc_info()[-1].tb_next:
+            raise
+        else:
+            raise exc.ModuleLoadException()
+
+
+def load_readline():
+    try:
+        readline = __import__('readline')
+        if os.path.isfile('.history'):
+            readline.read_history_file('.history')
+        return readline
+    except ImportError:
+        pass
+
+
+def close_readline():
+    try:
+        readline = __import__('readline')
+        readline.write_history_file('.history')
+    except ImportError:
+        pass
+
