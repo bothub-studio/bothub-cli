@@ -57,6 +57,12 @@ class Cancel(CliException):
     pass
 
 
+class ConfigFileNotFound(CliException):
+    def __init__(self, path):
+        msg = "Config file not found: {}".format(path)
+        super(ConfigFileNotFound, self).__init__(msg)
+
+
 class ImproperlyConfigured(CliException):
     def __init__(self, msg=None):
         _msg = msg or "Invalid project directory. "\

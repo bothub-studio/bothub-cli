@@ -11,9 +11,7 @@ from bothub_cli import exceptions as exc
 from six.moves.configparser import ConfigParser
 
 
-class Config(object):
-    path = None
-
+class ConfigBase(object):
     def __init__(self, path=None):
         self.config = {}
         self.path = Config.determine_path(path)
@@ -32,9 +30,11 @@ class Config(object):
                 if os.path.isfile(path_candidate):
                     return path_candidate
 
-            non_exists_path = path[0]
-            Config.make_parent_dir(non_exists_path)
-            return non_exists_path
+            path_to_create = path[0]
+            Config.make_parent_dir(path_to_create)
+            return path_to_create
+
+        raise exc.ConfigFileNotFound(path)
 
     @staticmethod
     def make_parent_dir(path):
@@ -61,11 +61,17 @@ class Config(object):
         return self.config.get(key)
 
 
-class ProjectConfig(Config):
+class Config(ConfigBase):
+    def __init__(self, path=None):
+        _path = path or os.path.expanduser(os.path.join('~', '.bothub', 'config.yml'))
+        super(Config, self).__init__(_path)
+
+
+class ProjectConfig(ConfigBase):
     def __init__(self, path=('bothub.yml', 'bothub.yaml')):
         super(ProjectConfig, self).__init__(path)
 
 
-class ProjectMeta(Config):
+class ProjectMeta(ConfigBase):
     def __init__(self, path=os.path.join('.bothub', 'meta.yml')):
         super(ProjectMeta, self).__init__(path)
