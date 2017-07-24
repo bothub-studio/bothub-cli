@@ -76,3 +76,27 @@ class MockApi(object):
     def get_project_channels(self, project_id):
         self.executed.append(('get_project_channels', project_id))
         return self.responses.pop(0)
+
+    def set_project_property(self, project_id, key, value):
+        self.executed.append(('set_project_property', project_id, key, value))
+        return self.responses.pop(0)
+
+    def get_project_property(self, project_id):
+        self.executed.append(('get_project_property', project_id))
+        return self.responses.pop(0)
+
+    def delete_project_property(self, project_id, key):
+        self.executed.append(('delete_project_property', project_id, key))
+        return self.responses.pop(0)
+
+    def add_project_nlu(self, project_id, nlu, credentials):
+        self.executed.append(('add_project_nlu', project_id, nlu, credentials))
+        return self.responses.pop(0)
+
+    def get_project_nlus(self, project_id):
+        self.executed.append(('get_project_nlus', project_id))
+        return self.responses.pop(0)
+
+    def delete_project_nlu(self, project_id, nlu):
+        self.executed.append(('delete_project_nlu', project_id, nlu))
+        return self.responses.pop(0)

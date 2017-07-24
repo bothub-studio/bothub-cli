@@ -299,3 +299,151 @@ def test_rm_channel_should_execute_api_call():
 
     executed = api.executed.pop(0)
     assert executed == ('delete_project_channel', 3, 'mychannel')
+
+
+def test_ls_properties_should_execute_api_call():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append({
+        'mykey': 'testval',
+        'score': 100
+    })
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    cli.ls_properties()
+
+    executed = api.executed.pop(0)
+    assert executed == ('get_project_property', 3)
+
+
+def test_set_properties_should_execute_api_call():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append(True)
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    cli.set_properties('mykey', 'testval')
+
+    executed = api.executed.pop(0)
+    assert executed == ('set_project_property', 3, 'mykey', 'testval')
+
+
+def test_get_properties_should_execute_api_call():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append({
+        'mykey': 'myval'
+    })
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    result = cli.get_properties('mykey')
+    assert result == 'myval'
+
+    executed = api.executed.pop(0)
+    assert executed == ('get_project_property', 3)
+
+
+def test_rm_properties_should_execute_api_call():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append(True)
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    cli.rm_properties('mykey')
+
+    executed = api.executed.pop(0)
+    assert executed == ('delete_project_property', 3, 'mykey')
+
+
+def test_add_nlu_should_execute_api_call():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append(True)
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    cli.add_nlu('mynlu', {'api-key': 'mykey'})
+
+    executed = api.executed.pop(0)
+    assert executed == ('add_project_nlu', 3, 'mynlu', {'api-key': 'mykey'})
+    
+
+def test_ls_nlus_should_execute_api_call():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append([
+        {'nlu': 'apiai', 'credentials': {'api-key': 'testkey'}},
+        {'nlu': 'witai', 'credentials': {'api-key': 'mytestkey'}},
+    ])
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    result = cli.ls_nlus()
+    assert result == [
+        ['apiai'],
+        ['witai'],
+    ]
+
+    executed = api.executed.pop(0)
+    assert executed == ('get_project_nlus', 3)
+
+
+def test_ls_nlus_should_execute_api_call_and_list_detail():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append([
+        {'nlu': 'apiai', 'credentials': {'api-key': 'testkey'}},
+        {'nlu': 'witai', 'credentials': {'api-key': 'mytestkey'}},
+    ])
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    result = cli.ls_nlus(verbose=True)
+    assert result == [
+        ['apiai', {'api-key': 'testkey'}],
+        ['witai', {'api-key': 'mytestkey'}],
+    ]
+
+    executed = api.executed.pop(0)
+    assert executed == ('get_project_nlus', 3)
+
+
+def test_rm_nlu_should_execute_api_call():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append(True)
+    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    cli.rm_nlu('mynlu')
+
+    executed = api.executed.pop(0)
+    assert executed == ('delete_project_nlu', 3, 'mynlu')
