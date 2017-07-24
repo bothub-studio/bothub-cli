@@ -104,7 +104,10 @@ class Cli(object):
 
         response = self.api.get_code(project_id)
         code = response['code']
-        code_byte = eval(code)
+        if code[0] == 'b':
+            code_byte = eval(code)
+        else:
+            code_byte = code
 
         with open('code.tgz', 'wb') as code_file:
             code_file.write(code_byte)

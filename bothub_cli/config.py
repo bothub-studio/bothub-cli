@@ -8,6 +8,7 @@ import codecs
 import yaml
 from bothub_cli import exceptions as exc
 
+from six import string_types
 from six.moves.configparser import ConfigParser
 
 
@@ -19,7 +20,7 @@ class ConfigBase(object):
     @staticmethod
     def determine_path(path):
         # if path is not list, make sure parent dir exists and return
-        if isinstance(path, str):
+        if isinstance(path, string_types):
             Config.make_parent_dir(path)
             return path
 
