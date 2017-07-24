@@ -61,6 +61,18 @@ class ConfigBase(object):
     def get(self, key):
         return self.config.get(key)
 
+    def __setitem__(self, key, value):
+        self.set(key, value)
+
+    def __getitem__(self, key):
+        return self.get(key)
+
+    def __contains__(self, key):
+        return key in self.config
+
+    def __delitem__(self, key):
+        del self.config[key]
+
 
 class Config(ConfigBase):
     def __init__(self, path=None):
