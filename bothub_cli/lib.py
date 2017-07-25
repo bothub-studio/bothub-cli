@@ -114,7 +114,7 @@ class Cli(object):
         self.project_meta.save()
         response = self.api.get_code(project_id)
         code = response['code']
-        code_byte = eval(code) if code.startswith('b') else code
+        code_byte = eval(code) if code[0] == 'b' else code
 
         with open('code.tgz', 'wb') as code_file:
             code_file.write(code_byte)
