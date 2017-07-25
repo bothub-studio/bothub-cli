@@ -12,6 +12,7 @@ from bothub_cli import exceptions as exc
 from bothub_cli.api import Api
 from bothub_cli.config import Config
 from bothub_cli.config import ProjectConfig
+from bothub_cli.config import ProjectMeta
 from bothub_cli.utils import make_dist_package
 
 from .testutils import MockResponse
@@ -81,7 +82,17 @@ def fixture_project_config(path=None):
         os.remove(_path)
     config = ProjectConfig(_path)
     return config
-    
+
+
+def fixture_project_meta(path=None):
+    if path:
+        return ProjectMeta(path)
+    _path = os.path.join('test_result', 'test_lib_project_meta.yml')
+    if os.path.isfile(_path):
+        os.remove(_path)
+    config = ProjectMeta(_path)
+    return config
+
 
 def test_authenticate_should_save_config_file():
     transport, api = fixture_api()
@@ -104,11 +115,13 @@ def test_init_should_save_project_config_file():
         os.path.join('test_result', 'test_lib_project_config.yml')
     )
     project_config = fixture_project_config()
-    cli = lib.Cli(project_config=project_config, api=api, config=config)
+    project_meta = fixture_project_meta()
+
+    cli = lib.Cli(project_config=project_config, api=api, config=config, project_meta=project_meta)
     cli.init('testproject', '')
-    assert project_config.get('id') == 3
-    assert project_config.get('name') == 'testproject'
-    with open(project_config.path) as fin:
+    assert project_meta.get('id') == 3
+    assert project_meta.get('name') == 'testproject'
+    with open(project_meta.path) as fin:
         content = fin.read()
         assert 'testproject' in content
         assert '3' in content

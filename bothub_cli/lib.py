@@ -16,6 +16,7 @@ from bothub_cli import exceptions as exc
 from bothub_cli.api import Api
 from bothub_cli.config import Config
 from bothub_cli.config import ProjectConfig
+from bothub_cli.config import ProjectMeta
 from bothub_cli.clients import ConsoleChannelClient
 from bothub_cli.clients import ExternalHttpStorageClient
 from bothub_cli.utils import safe_mkdir
@@ -31,10 +32,11 @@ from bothub_cli.utils import close_readline
 
 class Cli(object):
     '''A CLI class represents '''
-    def __init__(self, api=None, config=None, project_config=None):
+    def __init__(self, api=None, config=None, project_config=None, project_meta=None):
         self.api = api or Api()
         self.config = config or Config()
         self.project_config = project_config or ProjectConfig()
+        self.project_meta = project_meta or ProjectMeta()
 
     def authenticate(self, username, password):
         token = self.api.authenticate(username, password)
@@ -47,8 +49,10 @@ class Cli(object):
         project_id = project['id']
         programming_language = 'python3'
         self.api.upload_code(project_id, programming_language)
-        self.project_config.set('id', project_id)
-        self.project_config.set('name', name)
+        self.project_meta.set('id', project_id)
+        self.project_meta.set('name', name)
+        self.project_meta.save()
+
         self.project_config.set('programming-language', programming_language)
         self.project_config.save()
 
@@ -99,15 +103,14 @@ class Cli(object):
         if os.path.isdir(_target_dir):
             raise exc.TargetDirectoryDuplicated(_target_dir)
 
-        project_id = self._get_project_id_with_name(project_name)
         self._load_auth()
-
+        project_id = self._get_project_id_with_name(project_name)
+        self.project_meta.set('id', project_id)
+        self.project_meta.set('name', project_name)
+        self.project_meta.save()
         response = self.api.get_code(project_id)
         code = response['code']
-        if code[0] == 'b':
-            code_byte = eval(code)
-        else:
-            code_byte = code
+        code_byte = eval(code) if code.startswith('b') else code
 
         with open('code.tgz', 'wb') as code_file:
             code_file.write(code_byte)
@@ -118,13 +121,11 @@ class Cli(object):
 
     def add_channel(self, channel, credentials):
         self._load_auth()
-        self.project_config.load()
         project_id = self._get_current_project_id()
         self.api.add_project_channel(project_id, channel, credentials)
 
     def ls_channel(self, verbose=False):
         self._load_auth()
-        self.project_config.load()
         project_id = self._get_current_project_id()
         channels = self.api.get_project_channels(project_id)
         args = ('channel',) if not verbose else ('channel', 'credentials')
@@ -133,19 +134,16 @@ class Cli(object):
 
     def rm_channel(self, channel):
         self._load_auth()
-        self.project_config.load()
         project_id = self._get_current_project_id()
         self.api.delete_project_channels(project_id, channel)
 
     def ls_properties(self):
         self._load_auth()
-        self.project_config.load()
         project_id = self._get_current_project_id()
         return self.api.get_project_property(project_id)
 
     def get_properties(self, key):
         self._load_auth()
-        self.project_config.load()
         project_id = self._get_current_project_id()
         data = self.api.get_project_property(project_id)
         return data[key]
@@ -157,19 +155,16 @@ class Cli(object):
             _value = value
 
         self._load_auth()
-        self.project_config.load()
         project_id = self._get_current_project_id()
         return self.api.set_project_property(project_id, key, _value)
 
     def rm_properties(self, key):
         self._load_auth()
-        self.project_config.load()
         project_id = self._get_current_project_id()
         self.api.delete_project_property(project_id, key)
 
     def test(self):
         self._load_auth()
-        self.project_config.load()
         load_readline()
 
         project_id = self._get_current_project_id()
@@ -192,13 +187,11 @@ class Cli(object):
 
     def add_nlu(self, nlu, credentials):
         self._load_auth()
-        self.project_config.load()
         project_id = self._get_current_project_id()
         self.api.add_project_nlu(project_id, nlu, credentials)
 
     def ls_nlus(self, verbose=False):
         self._load_auth()
-        self.project_config.load()
         project_id = self._get_current_project_id()
         nlus = self.api.get_project_nlus(project_id)
         args = ('nlu',) if not verbose else ('nlu', 'credentials')
@@ -207,13 +200,11 @@ class Cli(object):
 
     def rm_nlu(self, nlu):
         self._load_auth()
-        self.project_config.load()
         project_id = self._get_current_project_id()
         self.api.delete_project_nlu(project_id, nlu)
 
     def logs(self):
         self._load_auth()
-        self.project_config.load()
         project_id = self._get_current_project_id()
         logs = self.api.get_project_execution_logs(project_id)
         return sorted(logs, key=lambda x: x['regdate'])
@@ -224,8 +215,8 @@ class Cli(object):
         self.api.load_auth(self.config)
 
     def _get_current_project_id(self):
-        self.project_config.load()
-        project_id = self.project_config.get('id')
+        self.project_meta.load()
+        project_id = self.project_meta.get('id')
         if not project_id:
             raise exc.ImproperlyConfigured()
         return project_id
