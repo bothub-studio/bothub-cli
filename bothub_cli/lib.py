@@ -48,13 +48,17 @@ class Cli(object):
         project = self.api.create_project(name, description)
         project_id = project['id']
         programming_language = 'python3'
-        self.api.upload_code(project_id, programming_language)
         self.project_meta.set('id', project_id)
         self.project_meta.set('name', name)
         self.project_meta.save()
 
         self.project_config.set('programming-language', programming_language)
         self.project_config.save()
+
+    def init_code(self):
+        project_id = self.project_meta.get('id')
+        programming_language = self.project_config.get('programming-language')
+        self.api.upload_code(project_id, programming_language)
 
     def get_project(self, project_id):
         self._load_auth()
@@ -100,7 +104,7 @@ class Cli(object):
     def clone(self, project_name, target_dir=None):
         _target_dir = target_dir or project_name
 
-        if os.path.isdir(_target_dir):
+        if os.path.isdir(_target_dir) and _target_dir != '.':
             raise exc.TargetDirectoryDuplicated(_target_dir)
 
         self._load_auth()
