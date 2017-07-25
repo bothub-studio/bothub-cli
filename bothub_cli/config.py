@@ -88,3 +88,21 @@ class ProjectConfig(ConfigBase):
 class ProjectMeta(ConfigBase):
     def __init__(self, path=os.path.join('.bothub-meta', 'meta.yml')):
         super(ProjectMeta, self).__init__(path)
+
+    @staticmethod
+    def is_exists():
+        return os.path.isfile(self.path)
+
+    def migrate_from_project_config(self, project_config):
+        project_id = project_config.get('id')
+        if project_id:
+            self.set('id', project_id)
+            del project_config['id']
+            self.save()
+            project_config.save()
+        project_name = project_config.get('name')
+        if project_name:
+            self.set('name', project_name)
+            del project_config['name']
+            self.save()
+            project_config.save()
