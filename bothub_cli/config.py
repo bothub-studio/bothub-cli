@@ -50,8 +50,10 @@ class ConfigBase(object):
         except IOError:
             raise exc.ImproperlyConfigured()
 
-    def save(self):
-        with codecs.open(self.path, 'wb', encoding='utf8') as fout:
+    def save(self, target_dir=None):
+        _path = os.path.join(target_dir, self.path) if target_dir else self.path
+        Config.make_parent_dir(_path)
+        with codecs.open(_path, 'wb', encoding='utf8') as fout:
             content = yaml.dump(self.config, default_flow_style=False)
             fout.write(content)
 
