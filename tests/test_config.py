@@ -6,6 +6,7 @@ import os
 import codecs
 import shutil
 from bothub_cli.config import ConfigBase
+from bothub_cli.config import ProjectMeta
 
 
 def setup_function():
@@ -93,3 +94,21 @@ def test_config_del_should_remove_entry():
     assert 'auth_token' in config
     del config['auth_token']
     assert 'auth_token' not in config
+
+
+def test_migrate_should_move_some_entries():
+    project_meta_path = os.path.join('test_result', 'test_lib_project_meta.yml')
+    project_meta = ProjectMeta(project_meta_path)
+
+    project_config_path = os.path.join('test_result', 'test_lib_dummy_config.yml')
+    project_config = ConfigBase(project_config_path)
+    project_config['id'] = 30
+    project_config['name'] = 'testproject'
+
+    project_meta.migrate_from_project_config(project_config)
+
+    assert project_meta['id'] == 30
+    assert project_meta['name'] == 'testproject'
+    
+    assert 'id' not in project_config
+    assert 'name' not in project_config
