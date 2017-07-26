@@ -139,7 +139,7 @@ def make_dist_package(dist_file_path, source_dir='.', ignores=tuple()):
             if os.path.isfile(fname):
                 tout.add(fname)
             elif os.path.isdir(fname):
-                if fname in ignores and fname in PACKAGE_IGNORE_PATTERN:
+                if fname in ignores or fname in PACKAGE_IGNORE_PATTERN:
                     continue
                 tout.add(fname)
 
