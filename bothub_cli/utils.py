@@ -16,7 +16,12 @@ from bothub_cli import __version__
 from bothub_cli import exceptions as exc
 
 PYPI_VERSION_PATTERN = re.compile(r'bothub_cli-(.+?)-py2.py3-none-any.whl')
-PACKAGE_IGNORE_PATTERN = set(['.bothub-meta', 'dist'])
+PACKAGE_IGNORE_PATTERN = [
+    re.compile('.bothub-meta'),
+    re.compile('dist'),
+    re.compile('.*\.pyc'),
+    re.compile('.*/__pycache__/.*'),
+]
 
 
 class Cache(object):
@@ -127,6 +132,15 @@ def timestamp(dt=None):
     return int(time.mktime(dt.timetuple()))
 
 
+def check_ignore_pattern(name, soft_ignore_patterns=None):
+    if name in soft_ignore_patterns:
+        raise exc.IgnorePatternMatched()
+
+    for pattern in PACKAGE_IGNORE_PATTERN:
+        if pattern.match(name):
+            raise exc.IgnorePatternMatched()
+
+
 def make_dist_package(dist_file_path, source_dir='.', ignores=tuple()):
     '''Make dist package file of current project directory.
     Includes all files of current dir, bothub dir and tests dir.
@@ -136,12 +150,14 @@ def make_dist_package(dist_file_path, source_dir='.', ignores=tuple()):
 
     with tarfile.open(dist_file_path, 'w:gz') as tout:
         for fname in os.listdir(source_dir):
-            if os.path.isfile(fname):
-                tout.add(fname)
-            elif os.path.isdir(fname):
-                if fname in ignores or fname in PACKAGE_IGNORE_PATTERN:
-                    continue
-                tout.add(fname)
+            try:
+                check_ignore_pattern(fname, soft_ignore_patterns=ignores)
+                if os.path.isfile(fname):
+                    tout.add(fname)
+                elif os.path.isdir(fname):
+                    tout.add(fname)
+            except exc.IgnorePatternMatched:
+                pass
 
 
 def extract_dist_package(dist_file_path, target_dir=None):

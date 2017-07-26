@@ -111,3 +111,7 @@ class TargetDirectoryDuplicated(CliException):
     def __init__(self, target_dir):
         msg = "Target directory {} already exists. Try with another target directory".format(target_dir)
         super(TargetDirectoryDuplicated, self).__init__(msg)
+
+
+class IgnorePatternMatched(CliException):
+    pass
