@@ -137,6 +137,21 @@ def test_get_latest_version_from_pypi_should_return_a_version():
         assert version == '0.1.7'
 
 
+def test_get_latest_version_from_pypi_with_cache_should_return_cached_version():
+    cache = {}
+    cache['latest_pypi_version'] = True
+    assert utils.get_latest_version_from_pypi(cache=cache) is True
+
+
+def test_check_latest_version_should_passed():
+    with open('fixtures/pypi-versions.txt') as fin:
+        content = fin.read()
+
+    with requests_mock.mock() as m:
+        m.get('https://pypi.python.org/simple/bothub-cli', text=content)
+        utils.check_latest_version()
+
+
 def test_timestamp_should_return_int():
     assert isinstance(utils.timestamp(), int)
 

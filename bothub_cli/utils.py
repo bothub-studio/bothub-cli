@@ -94,11 +94,11 @@ def get_latest_version(versions):
     return sorted_versions[0]
 
 
-def get_latest_version_from_pypi(use_cache=True):
+def get_latest_version_from_pypi(use_cache=True, cache=None):
     try:
         if use_cache:
-            cache = Cache()
-            latest_version = cache.get('latest_pypi_version')
+            _cache = cache or Cache()
+            latest_version = _cache.get('latest_pypi_version')
             if latest_version:
                 return latest_version
         response = requests.get('https://pypi.python.org/simple/bothub-cli', timeout=2)
@@ -106,20 +106,16 @@ def get_latest_version_from_pypi(use_cache=True):
         versions = find_versions(content)
         latest_version = get_latest_version(versions)
         if use_cache:
-            cache.set('latest_pypi_version', latest_version)
+            _cache.set('latest_pypi_version', latest_version)
         return latest_version
     except requests.exceptions.Timeout:
         raise exc.Timeout()
 
 
-def is_latest_version():
-    pypi_version = get_latest_version_from_pypi()
-    return (cmp_versions(__version__, pypi_version) >= 0, pypi_version)
-
-
 def check_latest_version():
     try:
-        is_latest, pypi_version = is_latest_version()
+        pypi_version = get_latest_version_from_pypi()
+        is_latest = cmp_versions(__version__, pypi_version) >= 0
         if not is_latest:
             raise exc.NotLatestVersion(__version__, pypi_version)
 
