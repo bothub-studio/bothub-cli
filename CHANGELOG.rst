@@ -1,3 +1,10 @@
+0.1.15
+------
+
+* raise test coverage to 80%
+* introduce project meta and move some project config properties to it
+
+
 0.1.14
 ------
 
