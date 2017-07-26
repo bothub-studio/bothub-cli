@@ -90,10 +90,12 @@ class Cli(object):
 
         safe_mkdir('dist')
         dist_file_path = os.path.join('dist', 'bot.tgz')
+        if console:
+            console('Make dist package.')
         make_dist_package(dist_file_path, source_dir)
 
         if console:
-            console('Upload code')
+            console('Upload code', nl=False)
         with open(dist_file_path, 'rb') as dist_file:
             dependency = read_content_from_file('requirements.txt') or 'bothub'
             project_id = self._get_current_project_id()
@@ -238,14 +240,19 @@ class Cli(object):
         raise exc.ProjectNameNotFound(project_name)
 
     def _wait_deploy_completion(self, project_id, console, wait_interval=1, max_retries=30):
-        if console:
-            console('Deploying', nl=False)
+        first_deploying_dot = True
         for _ in range(max_retries):
             project = self.api.get_project(project_id)
             if project['status'] == 'online':
                 if console:
                     console('.')
                 return
+
+            if project['status'] == 'deploying' and console:
+                if first_deploying_dot:
+                    console('.')
+                    console('Restarting container', nl=False)
+                    first_deploying_dot = False
 
             if console:
                 console('.', nl=False)
