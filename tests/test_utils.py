@@ -141,6 +141,37 @@ def test_timestamp_should_return_int():
     assert isinstance(utils.timestamp(), int)
 
 
+def test_make_event_should_construct_data():
+    data = utils.make_event('hello')
+    assert data == {
+        'trigger': 'cli',
+        'channel': 'cli',
+        'sender': {
+            'id': 'localuser',
+            'name': 'Local user'
+        },
+        'content': 'hello',
+        'raw_data': 'hello'
+    }
+
+
+def test_make_event_should_construct_data_with_location():
+    data = utils.make_event('/location 30 20')
+    assert data == {
+        'trigger': 'cli',
+        'channel': 'cli',
+        'sender': {
+            'id': 'localuser',
+            'name': 'Local user'
+        },
+        'location': {
+            'latitude': '30',
+            'longitude': '20',
+        },
+        'raw_data': '/location 30 20'
+    }
+
+
 def test_tabulate_dict_should_destructure_dict():
     data = [
         {'name': 'abcd', 'age': 10, 'score': 3.3},
