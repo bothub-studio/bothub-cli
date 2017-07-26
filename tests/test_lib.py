@@ -538,3 +538,41 @@ def test_logs_should_execute_api_call():
 
     executed = api.executed.pop(0)
     assert executed == ('get_project_execution_logs', 3)
+
+
+def test_wait_deploy_completion_should_passed():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    project_meta = fixture_project_meta()
+    cli = lib.Cli(project_config=project_config, api=api, config=config, project_meta=project_meta)
+
+    for _ in range(3):
+        api.responses.append({'status': 'offline'})
+    api.responses.append({'status': 'online'})
+    cli._wait_deploy_completion(3, None, wait_interval=0, max_retries=4)
+
+
+def test_wait_deploy_completion_should_raise_failed():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    project_meta = fixture_project_meta()
+    cli = lib.Cli(project_config=project_config, api=api, config=config, project_meta=project_meta)
+
+    for _ in range(4):
+        api.responses.append({'status': 'offline'})
+
+    with pytest.raises(exc.DeployFailed):
+        cli._wait_deploy_completion(3, None, wait_interval=0, max_retries=4)
+
+
+def test_load_bot_should_passed():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    project_meta = fixture_project_meta()
+    cli = lib.Cli(project_config=project_config, api=api, config=config, project_meta=project_meta)
+
+    api.responses.append([])
+    cli._load_bot(target_dir='fixtures')

@@ -237,10 +237,10 @@ class Cli(object):
                 return p['id']
         raise exc.ProjectNameNotFound(project_name)
 
-    def _wait_deploy_completion(self, project_id, console):
+    def _wait_deploy_completion(self, project_id, console, wait_interval=1, max_retries=30):
         if console:
             console('Deploying', nl=False)
-        for _ in range(30):
+        for _ in range(max_retries):
             project = self.api.get_project(project_id)
             if project['status'] == 'online':
                 if console:
@@ -249,10 +249,11 @@ class Cli(object):
 
             if console:
                 console('.', nl=False)
-            time.sleep(1)
+            time.sleep(wait_interval)
         raise exc.DeployFailed()
 
-    def _load_bot(self, project_id):
+    def _load_bot(self, target_dir='.'):
+        project_id = self._get_current_project_id()
         event = {
             'sender': {
                 'id': '-1'
@@ -266,10 +267,10 @@ class Cli(object):
         channel_client = ConsoleChannelClient()
         storage_client = ExternalHttpStorageClient(
             self.config.get('auth_token'),
-            self._get_current_project_id()
+            project_id,
         )
         nlu_client_factory = NluClientFactory(context)
-        bot_class = get_bot_class()
+        bot_class = get_bot_class(target_dir)
         bot = bot_class(
             channel_client=channel_client,
             storage_client=storage_client,
