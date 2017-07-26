@@ -215,20 +215,20 @@ def get_bot_class():
             raise exc.ModuleLoadException()
 
 
-def load_readline():
+def load_readline(history_file_path='.history'):
     try:
         readline = __import__('readline')
-        if os.path.isfile('.history'):
-            readline.read_history_file('.history')
+        if os.path.isfile(history_file_path):
+            readline.read_history_file(history_file_path)
         return readline
     except ImportError:
         pass
 
 
-def close_readline():
+def close_readline(history_file_path='.history'):
     try:
         readline = __import__('readline')
-        readline.write_history_file('.history')
+        readline.write_history_file(history_file_path)
     except ImportError:
         pass
 
