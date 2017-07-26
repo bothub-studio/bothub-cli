@@ -202,9 +202,9 @@ def tabulate_dict(lst, *fields):
     return result
 
 
-def get_bot_class():
+def get_bot_class(target_dir='.'):
     try:
-        sys.path.append('.')
+        sys.path.append(target_dir)
         __import__('bothub.bot')
         mod = sys.modules['bothub.bot']
         return mod.Bot

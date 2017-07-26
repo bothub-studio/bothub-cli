@@ -163,3 +163,7 @@ def test_load_readline():
 def test_close_readline():
     history_file_path = os.path.join('test_result', 'readline_history')
     utils.close_readline(history_file_path)
+
+
+def test_get_bot_class():
+    utils.get_bot_class(target_dir='fixtures')
