@@ -21,7 +21,6 @@ class ConfigBase(object):
     def determine_path(path):
         # if path is not list, make sure parent dir exists and return
         if isinstance(path, string_types):
-            Config.make_parent_dir(path)
             return path
 
         # if path is list or tuple, iterate to lookup existing path,
@@ -32,7 +31,6 @@ class ConfigBase(object):
                     return path_candidate
 
             path_to_create = path[0]
-            Config.make_parent_dir(path_to_create)
             return path_to_create
 
         raise exc.ConfigFileNotFound(path)
@@ -75,6 +73,9 @@ class ConfigBase(object):
     def __delitem__(self, key):
         del self.config[key]
 
+    def is_exists(self):
+        return os.path.isfile(self.path)
+
 
 class Config(ConfigBase):
     def __init__(self, path=None):
@@ -90,10 +91,6 @@ class ProjectConfig(ConfigBase):
 class ProjectMeta(ConfigBase):
     def __init__(self, path=os.path.join('.bothub-meta', 'meta.yml')):
         super(ProjectMeta, self).__init__(path)
-
-    @staticmethod
-    def is_exists():
-        return os.path.isfile(self.path)
 
     def migrate_from_project_config(self, project_config):
         project_id = project_config.get('id')

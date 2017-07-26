@@ -38,6 +38,10 @@ class Cli(object):
         self.project_config = project_config or ProjectConfig()
         self.project_meta = project_meta or ProjectMeta()
 
+        if not self.project_meta.is_exists() and self.project_config.is_exists():
+            self.project_config.load()
+            self.project_meta.migrate_from_project_config(self.project_config)
+
     def authenticate(self, username, password):
         token = self.api.authenticate(username, password)
         self.config.set('auth_token', token)
