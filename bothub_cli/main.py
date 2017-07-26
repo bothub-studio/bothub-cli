@@ -74,7 +74,7 @@ def init():
                 click.secho('Download project template.')
                 lib_cli.clone(normalized_name, target_dir='.')
             else:
-                click.secho('You might already have a project code. Skip to initialize a project template.')
+                click.secho('Skip to initialize a project template.')
 
             click.secho('Project has created.', fg='green')
             break
