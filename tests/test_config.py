@@ -8,15 +8,20 @@ import shutil
 from bothub_cli.config import ConfigBase
 
 
+def setup_function():
+    if not os.path.isdir('test_result'):
+        os.makedirs('test_result')
+
+
+def teardown_function():
+    if os.path.isdir('test_result'):
+        shutil.rmtree('test_result')
+
+
 def fixture_config(filename='test.yml'):
     shutil.rmtree('test_result', ignore_errors=True)
     config = ConfigBase(os.path.join('test_result', filename))
     return config
-
-
-def test_config_init_should_make_parent_dir():
-    fixture_config()
-    assert os.path.isdir('test_result')
 
 
 def test_config_save_should_make_file():
@@ -53,6 +58,7 @@ def test_config_contains_should_true():
 
 def test_config_load_and_get_should_contains_entry():
     config = fixture_config('test2.yml')
+    config.save()
 
     with codecs.open(os.path.join('test_result', 'test2.yml'), 'wb', encoding='utf8') as fout:
         content = 'auth_token: testtoken'
@@ -64,6 +70,7 @@ def test_config_load_and_get_should_contains_entry():
 
 def test_config_load_and_getitem_should_contains_entry():
     config = fixture_config('test2.yml')
+    config.save()
 
     with codecs.open(os.path.join('test_result', 'test2.yml'), 'wb', encoding='utf8') as fout:
         content = 'auth_token: testtoken'
@@ -75,6 +82,7 @@ def test_config_load_and_getitem_should_contains_entry():
 
 def test_config_del_should_remove_entry():
     config = fixture_config('test2.yml')
+    config.save()
 
     with codecs.open(os.path.join('test_result', 'test2.yml'), 'wb', encoding='utf8') as fout:
         content = 'auth_token: testtoken'
