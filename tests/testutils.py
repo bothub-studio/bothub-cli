@@ -100,3 +100,7 @@ class MockApi(object):
     def delete_project_nlu(self, project_id, nlu):
         self.executed.append(('delete_project_nlu', project_id, nlu))
         return self.responses.pop(0)
+
+    def get_project_execution_logs(self, project_id):
+        self.executed.append(('get_project_execution_logs', project_id))
+        return self.responses.pop(0)

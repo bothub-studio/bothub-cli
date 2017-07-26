@@ -511,3 +511,30 @@ def test_rm_nlu_should_execute_api_call():
 
     executed = api.executed.pop(0)
     assert executed == ('delete_project_nlu', 3, 'mynlu')
+
+
+def test_logs_should_execute_api_call():
+    api = MockApi()
+    config = fixture_config()
+    project_config = fixture_project_config()
+    project_meta = fixture_project_meta()
+
+    shutil.copyfile(
+        os.path.join('fixtures', 'test_bothub.yml'),
+        os.path.join('test_result', 'test_lib_project_config.yml')
+    )
+    api.responses.append([
+        {'regdate': 3},
+        {'regdate': 1},
+        {'regdate': 2},
+    ])
+    cli = lib.Cli(project_config=project_config, api=api, config=config, project_meta=project_meta)
+    result = cli.logs()
+    assert result == [
+        {'regdate': 1},
+        {'regdate': 2},
+        {'regdate': 3},
+    ]
+
+    executed = api.executed.pop(0)
+    assert executed == ('get_project_execution_logs', 3)
