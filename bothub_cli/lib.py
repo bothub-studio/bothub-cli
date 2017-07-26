@@ -115,7 +115,7 @@ class Cli(object):
         project_id = self._get_project_id_with_name(project_name)
         self.project_meta.set('id', project_id)
         self.project_meta.set('name', project_name)
-        self.project_meta.save()
+        self.project_meta.save(_target_dir)
         response = self.api.get_code(project_id)
         code = response['code']
         code_byte = eval(code) if code[0] == 'b' else code
