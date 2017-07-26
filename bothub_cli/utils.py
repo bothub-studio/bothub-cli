@@ -16,6 +16,7 @@ from bothub_cli import __version__
 from bothub_cli import exceptions as exc
 
 PYPI_VERSION_PATTERN = re.compile(r'bothub_cli-(.+?)-py2.py3-none-any.whl')
+PACKAGE_IGNORE_PATTERN = set(['.bothub-meta', 'dist'])
 
 
 class Cache(object):
@@ -126,7 +127,7 @@ def timestamp(dt=None):
     return int(time.mktime(dt.timetuple()))
 
 
-def make_dist_package(dist_file_path, source_dir='.'):
+def make_dist_package(dist_file_path, source_dir='.', ignores=tuple()):
     '''Make dist package file of current project directory.
     Includes all files of current dir, bothub dir and tests dir.
     Dist file is compressed with tar+gzip.'''
@@ -137,7 +138,9 @@ def make_dist_package(dist_file_path, source_dir='.'):
         for fname in os.listdir(source_dir):
             if os.path.isfile(fname):
                 tout.add(fname)
-            elif os.path.isdir(fname) and fname in ['bothub', 'tests']:
+            elif os.path.isdir(fname):
+                if fname in ignores and fname in PACKAGE_IGNORE_PATTERN:
+                    continue
                 tout.add(fname)
 
 
