@@ -60,7 +60,7 @@ def init():
         try:
             lib_cli = lib.Cli()
             _name = None
-            code_exists = os.path.isfile('bothub.yml')
+            project_config_exists = lib_cli.project_config.is_exists()
             name = click.prompt('Project name')
             normalized_name = name.strip()
             if not normalized_name:
@@ -68,7 +68,7 @@ def init():
             click.secho('Creating project...', fg='green')
             lib_cli.init(normalized_name, '')
 
-            if not code_exists:
+            if not project_config_exists:
                 click.secho('Initialize project template.')
                 lib_cli.init_code()
                 click.secho('Download project template.')
