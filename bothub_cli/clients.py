@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+
 import requests
 
 
@@ -63,7 +65,7 @@ class ExternalHttpStorageClient(object):
 
     def set_current_user_data(self, data):
         channel, user_id = self.current_user
-        self.set_user_data(channel, user_id, data)
+        return self.set_user_data(channel, user_id, data)
 
     def get_current_user_data(self):
         channel, user_id = self.current_user

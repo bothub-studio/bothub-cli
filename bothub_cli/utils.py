@@ -4,15 +4,24 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 import os
 import re
+import sys
 import time
 from datetime import datetime
 from datetime import timedelta
 import yaml
 import requests
+import tarfile
 
+from bothub_cli import __version__
 from bothub_cli import exceptions as exc
 
 PYPI_VERSION_PATTERN = re.compile(r'bothub_cli-(.+?)-py2.py3-none-any.whl')
+PACKAGE_IGNORE_PATTERN = [
+    re.compile('.bothub-meta'),
+    re.compile('dist'),
+    re.compile('.*\.pyc'),
+    re.compile('.*/__pycache__/.*'),
+]
 
 
 class Cache(object):
@@ -85,17 +94,137 @@ def get_latest_version(versions):
     return sorted_versions[0]
 
 
-def get_latest_version_from_pypi():
+def get_latest_version_from_pypi(use_cache=True, cache=None):
     try:
-        cache = Cache()
-        latest_version = cache.get('latest_pypi_version')
-        if latest_version:
-            return latest_version
+        if use_cache:
+            _cache = cache or Cache()
+            latest_version = _cache.get('latest_pypi_version')
+            if latest_version:
+                return latest_version
         response = requests.get('https://pypi.python.org/simple/bothub-cli', timeout=2)
         content = response.content.decode('utf8')
         versions = find_versions(content)
         latest_version = get_latest_version(versions)
-        cache.set('latest_pypi_version', latest_version)
+        if use_cache:
+            _cache.set('latest_pypi_version', latest_version)
         return latest_version
     except requests.exceptions.Timeout:
         raise exc.Timeout()
+
+
+def check_latest_version():
+    try:
+        pypi_version = get_latest_version_from_pypi()
+        is_latest = cmp_versions(__version__, pypi_version) >= 0
+        if not is_latest:
+            raise exc.NotLatestVersion(__version__, pypi_version)
+
+    except exc.Timeout:
+        pass
+
+
+def timestamp(dt=None):
+    dt = dt or datetime.utcnow()
+    return int(time.mktime(dt.timetuple()))
+
+
+def check_ignore_pattern(name, soft_ignore_patterns=None):
+    if name in soft_ignore_patterns:
+        raise exc.IgnorePatternMatched()
+
+    for pattern in PACKAGE_IGNORE_PATTERN:
+        if pattern.match(name):
+            raise exc.IgnorePatternMatched()
+
+
+def make_dist_package(dist_file_path, source_dir='.', ignores=tuple()):
+    '''Make dist package file of current project directory.
+    Includes all files of current dir, bothub dir and tests dir.
+    Dist file is compressed with tar+gzip.'''
+    if os.path.isfile(dist_file_path):
+        os.remove(dist_file_path)
+
+    with tarfile.open(dist_file_path, 'w:gz') as tout:
+        for fname in os.listdir(source_dir):
+            try:
+                check_ignore_pattern(fname, soft_ignore_patterns=ignores)
+                if os.path.isfile(fname):
+                    tout.add(fname)
+                elif os.path.isdir(fname):
+                    tout.add(fname)
+            except exc.IgnorePatternMatched:
+                pass
+
+
+def extract_dist_package(dist_file_path, target_dir=None):
+    '''Extract dist package file to current directory.'''
+    _target_dir = target_dir or '.'
+
+    with tarfile.open(dist_file_path, 'r:gz') as tin:
+        tin.extractall(_target_dir)
+
+
+def make_event(message):
+    '''Make dummy event for test mode.'''
+    data = {
+        'trigger': 'cli',
+        'channel': 'cli',
+        'sender': {
+            'id': 'localuser',
+            'name': 'Local user'
+        },
+        'raw_data': message
+    }
+
+    if message.startswith('/location'):
+        _, latitude, longitude = message.split()
+        data['location'] = {
+            'latitude': latitude,
+            'longitude': longitude
+        }
+    elif message:
+        data['content'] = message
+
+    return data
+
+
+def tabulate_dict(lst, *fields):
+    result = [None] * len(lst)
+    for row_idx, row in enumerate(lst):
+        row_result = [None] * len(fields)
+        for col_idx, field in enumerate(fields):
+            row_result[col_idx] = row[field]
+        result[row_idx] = row_result
+    return result
+
+
+def get_bot_class(target_dir='.'):
+    try:
+        sys.path.append(target_dir)
+        __import__('bothub.bot')
+        mod = sys.modules['bothub.bot']
+        return mod.Bot
+    except ImportError:
+        if sys.exc_info()[-1].tb_next:
+            raise
+        else:
+            raise exc.ModuleLoadException()
+
+
+def load_readline(history_file_path='.history'):
+    try:
+        readline = __import__('readline')
+        if os.path.isfile(history_file_path):
+            readline.read_history_file(history_file_path)
+        return readline
+    except ImportError:
+        pass
+
+
+def close_readline(history_file_path='.history'):
+    try:
+        readline = __import__('readline')
+        readline.write_history_file(history_file_path)
+    except ImportError:
+        pass
+

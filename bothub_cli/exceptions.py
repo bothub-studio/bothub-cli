@@ -57,6 +57,12 @@ class Cancel(CliException):
     pass
 
 
+class ConfigFileNotFound(CliException):
+    def __init__(self, path):
+        msg = "Config file not found: {}".format(path)
+        super(ConfigFileNotFound, self).__init__(msg)
+
+
 class ImproperlyConfigured(CliException):
     def __init__(self, msg=None):
         _msg = msg or "Invalid project directory. "\
@@ -99,3 +105,13 @@ class NotLatestVersion(CliException):
                   latest_version
               )
         super(NotLatestVersion, self).__init__(msg)
+
+
+class TargetDirectoryDuplicated(CliException):
+    def __init__(self, target_dir):
+        msg = "Target directory {} already exists. Try with another target directory".format(target_dir)
+        super(TargetDirectoryDuplicated, self).__init__(msg)
+
+
+class IgnorePatternMatched(CliException):
+    pass

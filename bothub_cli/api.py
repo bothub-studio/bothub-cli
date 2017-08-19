@@ -4,71 +4,94 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 import os
 import time
+import logging
 from datetime import datetime
 
-import click
 import requests
 import jwt
 from bothub_cli import exceptions as exc
+from bothub_cli.utils import timestamp
 
 
-BASE_URL = os.environ.get('BOTHUB_API_BASE_URL', 'https://api.bothub.studio/api')
+logger = logging.getLogger('bothub.cli.api')
 
 
-class Api(object):
-    def __init__(self, base_url=None, transport=None, auth_token=None):
-        self.base_url = base_url or BASE_URL
+class ApiBase(object):
+    def __init__(self, base_url=None, transport=None, auth_token=None, verify_token_expire=True):
+        env_base_url = os.environ.get('BOTHUB_API_BASE_URL',
+                                      'https://api.bothub.studio/api')
+        self.base_url = base_url if base_url is not None else env_base_url
         self.transport = transport or requests
         self.auth_token = auth_token
+        self.verify_token_expire = verify_token_expire
 
-    def send_request(self, *args, **kwargs):
+    def _send_request(self, *args, **kwargs):
         method = kwargs.pop('method', 'get')
         func = getattr(self.transport, method)
         result = func(*args, **kwargs)
         return result
 
-    def load_auth(self, config):
-        self.auth_token = config.get('auth_token')
+    def _check_auth_token_expired(self):
+        logger.debug('Check auth token expiraration')
+        if not self.verify_token_expire:
+            logger.debug('Skip token expiraration check on debug mode')
+            return
 
-    def check_auth_token_expired(self):
         content = jwt.decode(self.auth_token, verify=False)
-        now_timestamp = int(time.mktime(datetime.utcnow().timetuple()))
+        now_timestamp = timestamp()
         if now_timestamp > content['exp']:
+            logger.debug('Token is expired: exp[%s] < now[%s]', content['exp'], now_timestamp)
             raise exc.AuthTokenExpired()
 
-    def gen_url(self, *args):
+    def _gen_url(self, *args):
         return '{}/{}'.format(self.base_url, '/'.join([str(arg) for arg in args]))
 
-    def get_response_cause(self, response):
+    def _get_response_cause(self, response):
         if response.json() == '':
             return
         return response.json().get('cause')
 
-    def check_auth_token(self):
+    def _check_auth_token(self):
         if not self.auth_token:
             raise exc.NoCredential()
 
-        self.check_auth_token_expired()
+        self._check_auth_token_expired()
 
-    def check_response(self, response):
+    def _check_response(self, response):
         if response.status_code // 100 in [2, 3]:
             return
 
         if response.status_code == 401:
-            raise exc.InvalidCredential("Authentication is failed. Try 'bothub configure' to verify login credentials: {}".format(self.get_response_cause(response)))
+            raise exc.InvalidCredential(
+                "Authentication is failed. "\
+                "Try 'bothub configure' to verify login credentials: {}"\
+                .format(self._get_response_cause(response)))
 
         if response.status_code == 404:
-            raise exc.NotFound('Resource not found: {}'.format(self.get_response_cause(response)))
+            raise exc.NotFound('Resource not found: {}'\
+                               .format(self._get_response_cause(response)))
 
         if response.status_code == 409:
-            raise exc.Duplicated(self.get_response_cause(response))
+            raise exc.Duplicated(self._get_response_cause(response))
 
-        raise exc.CliException(self.get_response_cause(response))
+        raise exc.CliException(self._get_response_cause(response))
+
+    def _get_auth_headers(self):
+        self._check_auth_token()
+        headers = {'Authorization': 'Bearer {}'.format(self.auth_token)}
+        return headers
+
+
+class Api(ApiBase):
+    '''Communicate with BotHub.Studio server'''
+
+    def load_auth(self, config):
+        self.auth_token = config.get('auth_token')
 
     def authenticate(self, username, password):
-        url = self.gen_url('users', 'access-token')
+        url = self._gen_url('users', 'access-token')
         data = {'username': username, 'password': password}
-        response = self.send_request(url, data, method='post')
+        response = self._send_request(url, data, method='post')
 
         if response.status_code == 404:
             raise exc.UserNotFound(username)
@@ -76,140 +99,139 @@ class Api(object):
         if response.status_code == 401:
             raise exc.AuthenticationFailed()
 
-        self.check_response(response)
+        self._check_response(response)
         response_dict = response.json()['data']
         return response_dict['access_token']
 
-    def get_auth_headers(self):
-        self.check_auth_token()
-        headers = {'Authorization': 'Bearer {}'.format(self.auth_token)}
-        return headers
+    def list_projects(self):
+        url = self._gen_url('users', 'self', 'projects')
+        headers = self._get_auth_headers()
+        response = self._send_request(url, headers=headers)
+        self._check_response(response)
+        return response.json()['data']
 
     def create_project(self, name, description):
         try:
-            url = self.gen_url('projects')
+            url = self._gen_url('projects')
             data = {'name': name, 'short_name': name, 'description': description}
-            headers = self.get_auth_headers()
-            response = self.send_request(url, json=data, headers=headers, method='post')
-            self.check_response(response)
+            headers = self._get_auth_headers()
+            response = self._send_request(url, json=data, headers=headers, method='post')
+            self._check_response(response)
             return response.json()['data']
         except exc.Duplicated:
             raise exc.ProjectNameDuplicated(name)
 
     def get_project(self, project_id):
         try:
-            url = self.gen_url('projects', project_id)
-            headers = self.get_auth_headers()
-            response = self.send_request(url, headers=headers)
-            self.check_response(response)
+            url = self._gen_url('projects', project_id)
+            headers = self._get_auth_headers()
+            response = self._send_request(url, headers=headers)
+            self._check_response(response)
             return response.json()['data']
         except exc.NotFound:
             raise exc.ProjectIdNotFound(project_id)
 
+    def delete_project(self, project_id):
+        url = self._gen_url('projects', project_id)
+        headers = self._get_auth_headers()
+        response = self._send_request(url, headers=headers, method='delete')
+        self._check_response(response)
+
+    def add_project_channel(self, project_id, channel, credentials):
+        url = self._gen_url('projects', project_id, 'channels', channel)
+        data = {'credentials': credentials}
+        headers = self._get_auth_headers()
+        response = self._send_request(url, json=data, headers=headers, method='post')
+        self._check_response(response)
+        return response.json()['data']
+
+    def get_project_channels(self, project_id):
+        url = self._gen_url('projects', project_id, 'channels')
+        headers = self._get_auth_headers()
+        response = self._send_request(url, headers=headers, method='get')
+        self._check_response(response)
+        return response.json()['data']
+
+    def delete_project_channels(self, project_id, channel):
+        url = self._gen_url('projects', project_id, 'channels', channel)
+        headers = self._get_auth_headers()
+        response = self._send_request(url, headers=headers, method='delete')
+        self._check_response(response)
+
     def upload_code(self, project_id, language, code=None, dependency=None):
-        url = self.gen_url('projects', project_id, 'bot')
+        url = self._gen_url('projects', project_id, 'bot')
         data = {'language': language}
         if dependency:
             data['dependency'] = dependency
         files = {'code': code} if code else None
-        headers = self.get_auth_headers()
-        response = self.send_request(url, data=data, files=files, headers=headers, method='post')
-        self.check_response(response)
+        headers = self._get_auth_headers()
+        response = self._send_request(
+            url, data=data, files=files, headers=headers, method='post'
+        )
+        self._check_response(response)
         return response.json()['data']
 
     def get_code(self, project_id):
-        url = self.gen_url('projects', project_id, 'bot')
-        headers = self.get_auth_headers()
-        response = self.send_request(url, headers=headers, method='get')
-        self.check_response(response)
+        url = self._gen_url('projects', project_id, 'bot')
+        headers = self._get_auth_headers()
+        response = self._send_request(url, headers=headers, method='get')
+        self._check_response(response)
         return response.json()['data']
-
-    def list_projects(self):
-        url = self.gen_url('users', 'self', 'projects')
-        headers = self.get_auth_headers()
-        response = self.send_request(url, headers=headers)
-        self.check_response(response)
-        return response.json()['data']
-
-    def delete_project(self, project_id):
-        url = self.gen_url('projects', project_id)
-        headers = self.get_auth_headers()
-        response = self.send_request(url, headers=headers, method='delete')
-        self.check_response(response)
-
-    def add_project_channel(self, project_id, channel, credentials):
-        url = self.gen_url('projects', project_id, 'channels', channel)
-        data = {'credentials': credentials}
-        headers = self.get_auth_headers()
-        response = self.send_request(url, json=data, headers=headers, method='post')
-        self.check_response(response)
-        return response.json()['data']
-
-    def get_project_channels(self, project_id):
-        url = self.gen_url('projects', project_id, 'channels')
-        headers = self.get_auth_headers()
-        response = self.send_request(url, headers=headers, method='get')
-        self.check_response(response)
-        return response.json()['data']
-
-    def delete_project_channels(self, project_id, channel):
-        url = self.gen_url('projects', project_id, 'channels', channel)
-        headers = self.get_auth_headers()
-        response = self.send_request(url, headers=headers, method='delete')
-        self.check_response(response)
 
     def set_project_property(self, project_id, key, value):
-        url = self.gen_url('projects', project_id, 'properties')
-        headers = self.get_auth_headers()
+        url = self._gen_url('projects', project_id, 'properties')
+        headers = self._get_auth_headers()
         data = {key: value}
-        response = self.send_request(url, json={'data': data}, headers=headers, method='post')
-        self.check_response(response)
+        response = self._send_request(
+            url, json={'data': data}, headers=headers, method='post'
+        )
+        self._check_response(response)
         return response.json()['data']
 
     def get_project_property(self, project_id):
-        url = self.gen_url('projects', project_id, 'properties')
-        headers = self.get_auth_headers()
-        response = self.send_request(url, headers=headers, method='get')
-        self.check_response(response)
+        url = self._gen_url('projects', project_id, 'properties')
+        headers = self._get_auth_headers()
+        response = self._send_request(url, headers=headers, method='get')
+        self._check_response(response)
         return response.json()['data']
 
     def delete_project_property(self, project_id, key):
-        url = self.gen_url('projects', project_id, 'properties', key)
-        headers = self.get_auth_headers()
-        response = self.send_request(url, headers=headers, method='delete')
-        self.check_response(response)
+        url = self._gen_url('projects', project_id, 'properties', key)
+        headers = self._get_auth_headers()
+        response = self._send_request(url, headers=headers, method='delete')
+        self._check_response(response)
 
     def add_project_nlu(self, project_id, nlu, credentials):
-        url = self.gen_url('projects', project_id, 'nlus')
+        url = self._gen_url('projects', project_id, 'nlus')
         data = {'credentials': credentials, 'nlu': nlu}
-        headers = self.get_auth_headers()
-        response = self.send_request(url, json=data, headers=headers, method='post')
-        self.check_response(response)
+        headers = self._get_auth_headers()
+        response = self._send_request(url, json=data, headers=headers, method='post')
+        self._check_response(response)
         return response.json()['data']
 
     def get_project_nlus(self, project_id):
-        url = self.gen_url('projects', project_id, 'nlus')
-        headers = self.get_auth_headers()
-        response = self.send_request(url, headers=headers)
-        self.check_response(response)
+        url = self._gen_url('projects', project_id, 'nlus')
+        headers = self._get_auth_headers()
+        response = self._send_request(url, headers=headers)
+        self._check_response(response)
         return response.json()['data']
 
     def get_project_nlu(self, project_id, nlu):
-        url = self.gen_url('projects', project_id, 'nlus', nlu)
-        headers = self.get_auth_headers()
-        response = self.send_request(url, headers=headers)
-        self.check_response(response)
+        url = self._gen_url('projects', project_id, 'nlus', nlu)
+        headers = self._get_auth_headers()
+        response = self._send_request(url, headers=headers)
+        self._check_response(response)
         return response.json()['data']
 
     def delete_project_nlu(self, project_id, nlu):
-        url = self.gen_url('projects', project_id, 'nlus', nlu)
-        headers = self.get_auth_headers()
-        response = self.send_request(url, headers=headers, method='delete')
-        self.check_response(response)
+        url = self._gen_url('projects', project_id, 'nlus', nlu)
+        headers = self._get_auth_headers()
+        response = self._send_request(url, headers=headers, method='delete')
+        self._check_response(response)
 
     def get_project_execution_logs(self, project_id):
-        url = self.gen_url('projects', project_id, 'logs')
-        headers = self.get_auth_headers()
-        response = self.send_request(url, headers=headers)
-        self.check_response(response)
+        url = self._gen_url('projects', project_id, 'logs')
+        headers = self._get_auth_headers()
+        response = self._send_request(url, headers=headers)
+        self._check_response(response)
         return response.json()['data']

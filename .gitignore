@@ -7,3 +7,5 @@ build/
 dist/
 /.coverage
 test_result/
+.mypy_cache/
+htmlcov/
