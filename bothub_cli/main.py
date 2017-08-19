@@ -6,7 +6,10 @@ import os
 import json
 import click
 from terminaltables import AsciiTable as Table
-from json import JSONDecodeError
+try:
+    from json import JSONDecodeError
+except ImportError:
+    JSONDecodeError = ValueError
 
 from bothub_cli import __version__
 from bothub_cli import lib
