@@ -59,7 +59,6 @@ def init():
     while True:
         try:
             lib_cli = lib.Cli()
-            _name = None
             project_config_exists = lib_cli.project_config.is_exists()
             name = click.prompt('Project name')
             normalized_name = name.strip()
