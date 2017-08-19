@@ -178,7 +178,7 @@ class Cli(object):
         load_readline()
 
         project_id = self._get_current_project_id()
-        bot = self._load_bot(project_id)
+        bot = self._load_bot()
 
         line = input('BotHub> ')
         while line:
