@@ -1,3 +1,9 @@
+0.1.16
+------
+
+* fix: ``ExternalHttpStorageClient.set_user_data`` didn't send data in its payload
+
+
 0.1.15
 ------
 

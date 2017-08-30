@@ -30,7 +30,7 @@ class ExternalHttpStorageClient(object):
         headers = self.get_headers()
         response = requests.post(
             '{}/projects/{}/properties'.format(self.base_url, self.project_id),
-            json=data,
+            json={'data': data},
             headers=headers
         )
         return response.json()['data']
@@ -49,7 +49,8 @@ class ExternalHttpStorageClient(object):
             '{}/projects/{}/user-properties/channels/{}/users/{}'.format(
                 self.base_url, self.project_id, channel, user_id
             ),
-            headers=headers
+            json={'data': data},
+            headers=headers,
         )
         return response.json()['data']
 
