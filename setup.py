@@ -36,6 +36,7 @@ setup(
         'pyyaml',
         'pyjwt',
         'terminaltables',
+        'prompt-toolkit',
         'bothub>=0.1.18',
     ],
     setup_requires=[

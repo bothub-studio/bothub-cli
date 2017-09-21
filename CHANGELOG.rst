@@ -2,6 +2,7 @@
 ------
 
 * fix: ``ExternalHttpStorageClient.set_user_data`` didn't send data in its payload
+* enhancement: use ``prompt-toolkit`` for ``bothub test`` prompt
 
 
 0.1.15

@@ -209,22 +209,3 @@ def get_bot_class(target_dir='.'):
             raise
         else:
             raise exc.ModuleLoadException()
-
-
-def load_readline(history_file_path='.history'):
-    try:
-        readline = __import__('readline')
-        if os.path.isfile(history_file_path):
-            readline.read_history_file(history_file_path)
-        return readline
-    except ImportError:
-        pass
-
-
-def close_readline(history_file_path='.history'):
-    try:
-        readline = __import__('readline')
-        readline.write_history_file(history_file_path)
-    except ImportError:
-        pass
-
