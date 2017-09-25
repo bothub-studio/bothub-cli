@@ -89,11 +89,12 @@ def init():
 
 
 @cli.command()
-def deploy():
+@click.option('--max-retries', default=30)
+def deploy(max_retries):
     '''Deploy project'''
     try:
         lib_cli = lib.Cli()
-        lib_cli.deploy(console=click.echo)
+        lib_cli.deploy(console=click.echo, max_retries=max_retries)
         click.secho('Project is deployed.', fg='green')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')

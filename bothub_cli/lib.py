@@ -83,7 +83,7 @@ class Cli(object):
         for project in _projects:
             self.api.delete_project(project['id'])
 
-    def deploy(self, console=None, source_dir='.'):
+    def deploy(self, console=None, source_dir='.', max_retries=30):
         self._load_auth()
         self.project_config.load()
 
@@ -104,7 +104,7 @@ class Cli(object):
                 dist_file,
                 dependency
             )
-        self._wait_deploy_completion(project_id, console)
+        self._wait_deploy_completion(project_id, console, max_retries=max_retries)
 
     def clone(self, project_name, target_dir=None):
         _target_dir = target_dir or project_name
