@@ -49,6 +49,7 @@ class ExternalHttpStorageClient(object):
             '{}/projects/{}/user-properties/channels/{}/users/{}'.format(
                 self.base_url, self.project_id, channel, user_id
             ),
+            json=data,
             headers=headers
         )
         return response.json()['data']
