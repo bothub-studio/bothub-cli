@@ -1,3 +1,11 @@
+0.1.16
+------
+
+* fix: ``ExternalHttpStorageClient.set_user_data`` didn't send data in its payload
+* enhancement: use ``prompt-toolkit`` for ``bothub test`` prompt
+* add --max-retries option to deploy command
+
+
 0.1.15
 ------
 

@@ -2,6 +2,7 @@
 
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
+import os
 import requests
 
 
@@ -13,7 +14,8 @@ class ConsoleChannelClient(object):
 
 
 class ExternalHttpStorageClient(object):
-    base_url = 'https://api.bothub.studio/api'
+    base_url = os.environ.get('BOTHUB_API_BASE_URL',
+                              'https://api.bothub.studio/api')
 
     def __init__(self, access_token, project_id, user=None):
         self.access_token = access_token
@@ -30,7 +32,7 @@ class ExternalHttpStorageClient(object):
         headers = self.get_headers()
         response = requests.post(
             '{}/projects/{}/properties'.format(self.base_url, self.project_id),
-            json=data,
+            json={'data': data},
             headers=headers
         )
         return response.json()['data']
@@ -49,8 +51,8 @@ class ExternalHttpStorageClient(object):
             '{}/projects/{}/user-properties/channels/{}/users/{}'.format(
                 self.base_url, self.project_id, channel, user_id
             ),
-            json=data,
-            headers=headers
+            json={'data': data},
+            headers=headers,
         )
         return response.json()['data']
 

@@ -8,7 +8,8 @@ import json
 import time
 import traceback
 
-from six.moves import input
+from prompt_toolkit import prompt
+from prompt_toolkit.history import FileHistory
 
 from bothub_client.clients import NluClientFactory
 
@@ -26,8 +27,6 @@ from bothub_cli.utils import extract_dist_package
 from bothub_cli.utils import make_event
 from bothub_cli.utils import tabulate_dict
 from bothub_cli.utils import get_bot_class
-from bothub_cli.utils import load_readline
-from bothub_cli.utils import close_readline
 
 
 class Cli(object):
@@ -84,7 +83,7 @@ class Cli(object):
         for project in _projects:
             self.api.delete_project(project['id'])
 
-    def deploy(self, console=None, source_dir='.'):
+    def deploy(self, console=None, source_dir='.', max_retries=30):
         self._load_auth()
         self.project_config.load()
 
@@ -105,7 +104,7 @@ class Cli(object):
                 dist_file,
                 dependency
             )
-        self._wait_deploy_completion(project_id, console)
+        self._wait_deploy_completion(project_id, console, max_retries=max_retries)
 
     def clone(self, project_name, target_dir=None):
         _target_dir = target_dir or project_name
@@ -175,25 +174,23 @@ class Cli(object):
 
     def test(self):
         self._load_auth()
-        load_readline()
+        history = FileHistory('.history')
 
         project_id = self._get_current_project_id()
         bot = self._load_bot()
 
-        line = input('BotHub> ')
-        while line:
+        while True:
             try:
+                line = prompt('BotHub> ', history=history)
+                if not line:
+                    continue
                 event = make_event(line)
                 context = {}
                 bot.handle_message(event, context)
-                line = input('BotHub> ')
-            except EOFError:
+            except (EOFError, KeyboardInterrupt):
                 break
             except Exception:
                 traceback.print_exc()
-                line = input('BotHub> ')
-
-        close_readline()
 
     def add_nlu(self, nlu, credentials):
         self._load_auth()

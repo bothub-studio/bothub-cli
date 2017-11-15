@@ -175,6 +175,7 @@ Show error logs.
 Run current project on local machine for test.
 
 .. code:: bash
+
    $ bothub test
 
 
