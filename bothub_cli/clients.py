@@ -2,6 +2,7 @@
 
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
+import os
 import requests
 
 
@@ -13,7 +14,8 @@ class ConsoleChannelClient(object):
 
 
 class ExternalHttpStorageClient(object):
-    base_url = 'https://api.bothub.studio/api'
+    base_url = os.environ.get('BOTHUB_API_BASE_URL',
+                              'https://api.bothub.studio/api')
 
     def __init__(self, access_token, project_id, user=None):
         self.access_token = access_token
