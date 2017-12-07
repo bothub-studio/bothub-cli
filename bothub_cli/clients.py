@@ -37,12 +37,12 @@ class ExternalHttpStorageClient(object):
         )
         return response.json()['data']
 
-    def get_project_data(self):
+    def get_project_data(self, key=None):
+        url = '{}/projects/{}/properties'.format(self.base_url, self.project_id)
+        if key:
+            url += '/{}'.format(key)
         headers = self.get_headers()
-        response = requests.get(
-            '{}/projects/{}/properties'.format(self.base_url, self.project_id),
-            headers=headers
-        )
+        response = requests.get(url, headers=headers)
         return response.json()['data']
 
     def set_user_data(self, channel, user_id, data):
@@ -56,20 +56,20 @@ class ExternalHttpStorageClient(object):
         )
         return response.json()['data']
 
-    def get_user_data(self, channel, user_id):
-        headers = self.get_headers()
-        response = requests.get(
-            '{}/projects/{}/user-properties/channels/{}/users/{}'.format(
-                self.base_url, self.project_id, channel, user_id
-            ),
-            headers=headers
+    def get_user_data(self, channel, user_id, key=None):
+        url = '{}/projects/{}/user-properties/channels/{}/users/{}'.format(
+            self.base_url, self.project_id, channel, user_id
         )
+        if key:
+            url += '/{}'.format(key)
+        headers = self.get_headers()
+        response = requests.get(url, headers=headers)
         return response.json()['data']
 
     def set_current_user_data(self, data):
         channel, user_id = self.current_user
         return self.set_user_data(channel, user_id, data)
 
-    def get_current_user_data(self):
+    def get_current_user_data(self, key=None):
         channel, user_id = self.current_user
-        return self.get_user_data(channel, user_id)
+        return self.get_user_data(channel, user_id, key=key)
