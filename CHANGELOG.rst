@@ -1,3 +1,9 @@
+0.1.17
+------
+
+* add a `key` argument to `get_project_data()` and `get_user_data()`
+
+
 0.1.16
 ------
 
