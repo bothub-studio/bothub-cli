@@ -201,15 +201,5 @@ def test_tabulate_dict_should_destructure_dict():
     ]
 
 
-def test_load_readline():
-    history_file_path = os.path.join('test_result', 'readline_history')
-    utils.load_readline(history_file_path)
-
-
-def test_close_readline():
-    history_file_path = os.path.join('test_result', 'readline_history')
-    utils.close_readline(history_file_path)
-
-
 def test_get_bot_class():
     utils.get_bot_class(target_dir='fixtures')

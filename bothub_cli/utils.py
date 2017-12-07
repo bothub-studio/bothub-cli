@@ -11,11 +11,13 @@ from datetime import timedelta
 import yaml
 import requests
 import tarfile
+from importlib import import_module
 
 from bothub_cli import __version__
 from bothub_cli import exceptions as exc
 
 PYPI_VERSION_PATTERN = re.compile(r'bothub_cli-(.+?)-py2.py3-none-any.whl')
+PYPI_SDK_VERSION_PATTERN = re.compile(r'bothub_client-(.+?)-py2.py3-none-any.whl')
 PACKAGE_IGNORE_PATTERN = [
     re.compile('.bothub-meta'),
     re.compile('dist'),
@@ -31,17 +33,17 @@ class Cache(object):
         if not os.path.isdir(parent_path):
             os.makedirs(parent_path)
 
-    def get(self, key):
+    def get(self, key, default=None):
         if not os.path.isfile(self.cache_path):
             return None
         content = read_content_from_file(self.cache_path)
         cache_entry = yaml.load(content)
         if not cache_entry:
-            return None
+            return default
         entry = cache_entry[key]
         now = datetime.now()
         if now > entry['expires']:
-            return None
+            return default
         return entry['value']
 
     def set(self, key, value, ttl=3600):
@@ -87,6 +89,55 @@ def cmp_versions(a, b):
     if version_a < version_b:
         return -1
     return 0
+
+
+class PackageVersion(object):
+    def __init__(self, name, package_name=None, cache=None, use_cache=True, package_filename_pattern=None):
+        self.name = name
+        self.package_name = package_name or name
+        self.cache = cache or Cache()
+        self.package_filename_pattern = package_filename_pattern or r'{}-(.+?)-py2.py3-none-any.whl'.format(name)
+
+    @staticmethod
+    def get_latest_version(versions):
+        sorted_versions = sorted(versions, key=lambda v: tuple([int(e) for e in v.split('.')]), reverse=True)
+        return sorted_versions[0]
+
+    def find_versions(self, content):
+        pattern = re.compile(self.package_filename_pattern)
+        return set(pattern.findall(content))
+
+    def get_latest_version_from_pypi(self):
+        try:
+            if self.use_cache:
+                latest_version = self.cache.get('latest_pypi_version', {}).get(self.name)
+                if latest_version:
+                    return latest_version
+            response = requests.get('https://pypi.python.org/simple/{}'.format(self.name), timeout=2)
+            content = response.content.decode('utf8')
+            versions = self.find_versions(content)
+            latest_version = PackageVersion.get_latest_version(versions)
+            if self.use_cache:
+                self.cache.get('latest_pypi_version').set(self.name, latest_version)
+            return latest_version
+        except requests.exceptions.Timeout:
+            raise exc.Timeout()
+
+    def check_latest_version(self):
+        try:
+            pypi_version = self.get_latest_version_from_pypi()
+            current_version = PackageVersion.get_current_version(self.package_name)
+            is_latest = cmp_versions(current_version, pypi_version) >= 0
+            if not is_latest:
+                raise exc.NotLatestVersion(__version__, pypi_version)
+
+        except exc.Timeout:
+            pass
+
+    @staticmethod
+    def get_current_version(package_name):
+        module = import_module(package_name)
+        return getattr(module, '__version__', None)
 
 
 def get_latest_version(versions):
