@@ -172,21 +172,35 @@ class Cli(object):
         project_id = self._get_current_project_id()
         self.api.delete_project_property(project_id, key)
 
+    def show_help(self):
+        print()
+        print("+ Bothub Test Console +")
+        print("+++++++++++++++++++++++")
+        print("Commands:")
+        print(" /help\t\tPrint help menu")
+        print(" /location\tSend user location")
+        print(" /exit\t\tExit the Test console")
+
     def test(self):
         self._load_auth()
         history = FileHistory('.history')
 
         project_id = self._get_current_project_id()
         bot = self._load_bot()
-
+        self.show_help()
         while True:
             try:
                 line = prompt('BotHub> ', history=history)
                 if not line:
                     continue
-                event = make_event(line)
-                context = {}
-                bot.handle_message(event, context)
+                if line.startswith('/help') :
+                    self.show_help()
+                elif line.startswith('/exit'):
+                    break
+                else :
+                    event = make_event(line)
+                    context = {}
+                    bot.handle_message(event, context)
             except (EOFError, KeyboardInterrupt):
                 break
             except Exception:
