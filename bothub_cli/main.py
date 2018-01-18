@@ -18,7 +18,16 @@ from bothub_cli import exceptions as exc
 
 def print_error(msg):
     click.secho(msg, fg='red')
-
+def print_introduction():
+    color = 'green'
+    click.secho('Step 1: bothub configure', fg=color)
+    click.echo ('-- Configure account credential')
+    click.secho('Step 2: bothub init', fg=color)
+    click.echo ('-- Create a minimum bot project in https://app.bothub.studio/ and clone to your local machine.')
+    click.secho('Step 3: bothub test', fg=color)
+    click.echo ('-- goto your new project directory and run `bothub test`')
+    click.secho('Setp 4: bothub deploy', fg=color)
+    click.echo ('-- change some code in bot.py than run `bothub deploy` to https://app.bothub.studio/')
 
 @click.group(invoke_without_command=True)
 @click.option('-V', '--version', is_flag=True, default=False)
@@ -38,6 +47,12 @@ def cli(ctx, version):
     if ctx.invoked_subcommand is None:
         print(ctx.get_help())
 
+@cli.command()
+def introduction():
+    '''
+    Introduction Guide
+    '''
+    print_introduction()
 
 @cli.command()
 def configure():
@@ -52,7 +67,6 @@ def configure():
         click.secho('Identified. Welcome {}.'.format(username), fg='green')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
-
 
 @cli.command()
 def init():
@@ -74,6 +88,7 @@ def init():
                 lib_cli.init_code()
                 click.secho('Download project template.')
                 lib_cli.clone(normalized_name, target_dir='.')
+                print_introduction()
             else:
                 click.secho('Skip to initialize a project template.')
 
