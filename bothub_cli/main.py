@@ -260,6 +260,20 @@ def ls_property():
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
+@property.command(name='reload')
+def reload_property():
+    '''Reload property list from server'''
+    try:
+        lib_cli = lib.Cli()
+        properties = lib_cli.reload_properties()
+        properties_list = [(k, v) for k, v in properties.items()]
+        header = ['Name', 'Value']
+        data = [header] + properties_list
+        table = Table(data)
+        click.secho(table.table)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
 
 @property.command(name='get')
 @click.argument('key')

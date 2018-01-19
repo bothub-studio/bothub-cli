@@ -18,6 +18,7 @@ from bothub_cli.api import Api
 from bothub_cli.config import Config
 from bothub_cli.config import ProjectConfig
 from bothub_cli.config import ProjectMeta
+from bothub_cli.config import ProjectProperty
 from bothub_cli.clients import ConsoleChannelClient
 from bothub_cli.clients import ExternalHttpStorageClient
 from bothub_cli.utils import safe_mkdir
@@ -31,15 +32,16 @@ from bothub_cli.utils import get_bot_class
 
 class Cli(object):
     '''A CLI class represents '''
-    def __init__(self, api=None, config=None, project_config=None, project_meta=None):
+    def __init__(self, api=None, config=None, project_config=None, project_meta=None, project_property=None):
         self.api = api or Api()
         self.config = config or Config()
         self.project_config = project_config or ProjectConfig()
         self.project_meta = project_meta or ProjectMeta()
-
+        self.project_property = project_property or ProjectProperty()
         if not self.project_meta.is_exists() and self.project_config.is_exists():
             self.project_config.load()
             self.project_meta.migrate_from_project_config(self.project_config)
+
 
     def authenticate(self, username, password):
         token = self.api.authenticate(username, password)
@@ -54,6 +56,8 @@ class Cli(object):
         self.project_meta.set('id', project_id)
         self.project_meta.set('name', name)
         self.project_meta.save()
+        self.project_property.config = {}
+        self.project_property.save()
 
         self.project_config.set('programming-language', programming_language)
         self.project_config.save()
@@ -147,15 +151,24 @@ class Cli(object):
         self.api.delete_project_channels(project_id, channel)
 
     def ls_properties(self):
+        self.project_property.load()
+        return self.project_property.config
+
+    def reload_properties(self):
         self._load_auth()
         project_id = self._get_current_project_id()
-        return self.api.get_project_property(project_id)
+        properties = self.api.get_project_property(project_id)
+        if not properties:
+            self.project_property.config = {}
+            self.project_property.save()
+        for k in properties:
+            self.project_property.set(k,properties[k])
+            self.project_property.save()
+        return properties
 
     def get_properties(self, key):
-        self._load_auth()
-        project_id = self._get_current_project_id()
-        data = self.api.get_project_property(project_id)
-        return data[key]
+        self.project_property.load()
+        return self.project_property.config[key]
 
     def set_properties(self, key, value):
         try:
@@ -163,14 +176,23 @@ class Cli(object):
         except ValueError:
             _value = value
 
+        self.project_property.load()
+        self.project_property.set(key,value)
+        self.project_property.save()
+
         self._load_auth()
         project_id = self._get_current_project_id()
         return self.api.set_project_property(project_id, key, _value)
 
     def rm_properties(self, key):
         self._load_auth()
+        self.project_property.load()
+        if self.project_property.config.get(key):
+            self.project_property.__delitem__(key)
+            self.project_property.save()
         project_id = self._get_current_project_id()
         self.api.delete_project_property(project_id, key)
+
 
     def show_help(self):
         print()
