@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function)
 import os
 import json
 import click
+import re
 from terminaltables import AsciiTable as Table
 try:
     from json import JSONDecodeError
@@ -171,33 +172,49 @@ def add_option_to_dict(d, option_name, option):
 
 def ask_channel_keys(channel, api_key, app_id, app_secret, page_access_token):
     if channel == 'telegram' :
-        if not api_key:
-            api_key = click.prompt('Please enter Telegram api-key')
+        while True:
+            check = re.match(r'[0-9]{9}:[\w.-]{35}', api_key)
+            if check:
+                api_key = check.group()
+                break
+            api_key = click.prompt('Please enter a valid Telegram api-key')
         return {'api_key':api_key}
     else :
-        if not app_id:
-            app_id = click.prompt('Please enter Facebook App id')
-        if not app_secret:
-            app_secret = click.prompt('Please enter Facebook App secret')
-        if not page_access_token:
+        while True:
+            check = re.match(r'[0-9]{6,20}', app_id)
+            if check :
+                app_id = check.group()
+                break
+            app_id = click.prompt('Please enter a valid Facebook App id')
+
+        while True:
+            check = re.match(r'[a-zA-Z0-9]{12,}', app_secret)
+            if check:
+                app_secret = check.group()
+                break
+            app_secret = click.prompt('Please enter a valid Facebook App secret')
+
+        while True:
+            check = re.match(r'[a-zA-Z0-9]{100,}', page_access_token)
+            if check:
+                page_access_token = check.group()
+                break
             page_access_token = click.prompt('Please enter Facebook Page access token')
         return {'app_id':app_id, 'app_secret':app_secret, 'page_access_token':page_access_token}
 
 @channel.command(name='add')
 @click.argument('channel', default='')
-@click.option('--api-key', help='Telegram api key')
-@click.option('--app-id', help='Facebook app id')
-@click.option('--app-secret', help='Facebook app secret')
-@click.option('--page-access-token', help='Facebook page access token')
+@click.option('--api-key', help='Telegram api key', default='')
+@click.option('--app-id', help='Facebook app id', default='')
+@click.option('--app-secret', help='Facebook app secret', default='')
+@click.option('--page-access-token', help='Facebook page access token', default='')
 def add_channel(channel, api_key, app_id, app_secret, page_access_token):
     '''Add a new channel to current project'''
     try:
         credentials = {}
-        if channel == 'telegram' or  channel == 'facebook':
-            credentials = ask_channel_keys(channel, api_key, app_id, app_secret, page_access_token)
-        else :
+        if not channel in ['telegram', 'facebook']:
             channel = click.prompt('Channel name (facebook, telegram)', type=click.Choice(['facebook', 'telegram']))
-            credentials = ask_channel_keys(channel, api_key, app_id, app_secret, page_access_token)
+        credentials = ask_channel_keys(channel, api_key, app_id, app_secret, page_access_token)
         lib_cli = lib.Cli()
         lib_cli.add_channel(channel, credentials)
         click.secho('Added a channel {}'.format(channel))
