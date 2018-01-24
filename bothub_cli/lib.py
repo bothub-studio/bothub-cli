@@ -199,9 +199,21 @@ class Cli(object):
         print("+ Bothub Test Console +")
         print("+++++++++++++++++++++++")
         print("Commands:")
-        print(" /help\t\tPrint help menu")
-        print(" /location\tSend user location")
-        print(" /exit\t\tExit the Test console")
+        commands = [
+           ("help", "Print help menu"),
+           ("location", "Send user location"),
+           ("exit", "Exit the Test console"),
+        ]
+        maxLen = 0
+        for command in commands:
+           if len(command[0]) > maxLen :
+               maxLen = len(command[0])
+
+        template_string = "/{0}:{2}{1}"
+        for command in commands:
+            nSpace = (maxLen - len(command[0])) + 2 # 2 is extra spaces
+            width = ' ' * nSpace
+            click.echo(template_string.format(command[0], command[1], width))
 
     def test(self):
         self._load_auth()
