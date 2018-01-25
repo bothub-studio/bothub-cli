@@ -32,7 +32,7 @@ from bothub_cli.utils import get_bot_class
 
 class Cli(object):
     '''A CLI class represents '''
-    def __init__(self, api=None, config=None, project_config=None, project_meta=None, project_property=None):
+    def __init__(self, api=None, config=None, project_config=None, project_meta=None, project_property=None, print_error=None, print_message=None):
         self.api = api or Api()
         self.config = config or Config()
         self.project_config = project_config or ProjectConfig()
@@ -42,6 +42,8 @@ class Cli(object):
             self.project_config.load()
             self.project_meta.migrate_from_project_config(self.project_config)
 
+        self.print_error = print_error or print
+        self.print_message = print_message or print
 
     def authenticate(self, username, password):
         token = self.api.authenticate(username, password)
@@ -193,27 +195,22 @@ class Cli(object):
         project_id = self._get_current_project_id()
         self.api.delete_project_property(project_id, key)
 
-
     def show_help(self):
-        print()
-        print("+ Bothub Test Console +")
-        print("+++++++++++++++++++++++")
-        print("Commands:")
+        self.print_message()
+        self.print_message("+ Bothub Test Console +")
+        self.print_message("+++++++++++++++++++++++")
+        self.print_message("Commands:")
         commands = [
            ("help", "Print help menu"),
            ("location", "Send user location"),
            ("exit", "Exit the Test console"),
         ]
-        maxLen = 0
-        for command in commands:
-           if len(command[0]) > maxLen :
-               maxLen = len(command[0])
-
+        max_len = max([len(command) for command, _ in commands])
         template_string = "/{0}:{2}{1}"
-        for command in commands:
-            nSpace = (maxLen - len(command[0])) + 2 # 2 is extra spaces
+        for command, description in commands:
+            nSpace = (max_len - len(command)) + 2 # 2 is extra spaces
             width = ' ' * nSpace
-            click.echo(template_string.format(command[0], command[1], width))
+            self.print_message(template_string.format(command, description, width))
 
     def test(self):
         self._load_auth()

@@ -19,6 +19,13 @@ from bothub_cli import exceptions as exc
 
 def print_error(msg):
     click.secho(msg, fg='red')
+
+def print_success(msg):
+    click.secho(msg, fg='green')
+
+def print_message(msg=''):
+    click.echo(msg)
+
 def print_introduction():
     color = 'green'
     click.secho('Step 1: bothub configure', fg=color)
@@ -170,18 +177,21 @@ def add_option_to_dict(d, option_name, option):
     if option:
         d[option_name] = option
 
-def ask_channel_keys(channel, **kwargs) :
-    channelObj = kwargs[channel]
-    i = 0
+def ask_channel_keys(param_list, **kwargs) :
     credentials = {}
-    while i < len(channelObj):
+    for param in param_list:
+        title = param['name'].replace('_', ' ').title()
+        valid_msg = ''
         while True:
-            check = re.match(channelObj[i]['rule'], channelObj[i]['value'])
-            if check:
-                credentials[channelObj[i]['param']] = check.group()
+            matches = re.match(param['rule'], param['value'])
+            if matches:
+                credentials[param['name']] = matches.group()
+                print_success('{} is saved'.format(title))
                 break
-            channelObj[i]['value'] = click.prompt(channelObj[i]['prompt'])
-        i += 1
+            elif param['value']:
+                valid_msg=' a valid'
+                print_error("{} is invalid".format(title))
+            param['value'] = click.prompt(param['prompt'].format(valid_msg, title))
     return credentials
 
 @channel.command(name='add')
@@ -199,16 +209,16 @@ def add_channel(channel, api_key, app_id, app_secret, page_access_token):
 
         channel_list = {
             'telegram': [
-                {'param':'api-key','value': api_key, 'prompt': 'Please enter Telegram api-key', 'rule': r'[0-9]{9}:[\w.-]{35}'},
+                {'name':'api_key','value': api_key, 'prompt': 'Please enter{} Telegram {}', 'rule': r'[0-9]{9}:[\w.-]{35}'},
             ],
             'facebook': [
-                {'param':'app-id','value': app_id, 'prompt': 'Please enter Facebook App Id', 'rule':r'[0-9]{6,20}'},
-                {'param':'app-secret' , 'value': app_secret, 'prompt': 'Please enter Facebook App Secret', 'rule':r'[a-zA-Z0-9]{12,}'},
-                {'param':'page-access-token' , 'value': page_access_token, 'prompt': 'Please enter Facebook Page Access Token', 'rule':r'[a-zA-Z0-9]{100,}'},
+                {'name':'app_id','value': app_id, 'prompt': 'Please enter{} Facebook {}', 'rule':r'[0-9]{6,20}'},
+                {'name':'app_secret' , 'value': app_secret, 'prompt': 'Please enter{} Facebook {}', 'rule':r'[a-zA-Z0-9]{12,}'},
+                {'name':'page_access_token' , 'value': page_access_token, 'prompt': 'Please enter{} Facebook {}', 'rule':r'[a-zA-Z0-9]{100,}'},
             ]
         }
 
-        credentials = ask_channel_keys(channel, **channel_list)
+        credentials = ask_channel_keys(channel_list[channel], **channel_list)
         lib_cli = lib.Cli()
         lib_cli.add_channel(channel, credentials)
         click.secho('Added a channel {}'.format(channel))
@@ -270,6 +280,7 @@ def ls_property():
         click.secho(table.table)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
 
 @property.command(name='reload')
 def reload_property():
@@ -382,7 +393,7 @@ def rm_nlu(nlu):
 def test():
     '''Run test chat session'''
     try:
-        lib_cli = lib.Cli()
+        lib_cli = lib.Cli(print_message=print_message)
         lib_cli.test()
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
