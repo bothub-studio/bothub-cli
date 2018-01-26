@@ -76,9 +76,8 @@ def configure():
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
-@cli.command()
-def init():
-    '''Initialize project'''
+
+def create_project(create_dir=False):
     click.echo('Initialize a new project.')
     while True:
         try:
@@ -95,7 +94,9 @@ def init():
                 click.secho('Initialize project template.')
                 lib_cli.init_code()
                 click.secho('Download project template.')
-                lib_cli.clone(normalized_name, target_dir='.')
+                target_dir = '.'
+                if create_dir: target_dir=normalized_name
+                lib_cli.clone(normalized_name, target_dir=target_dir)
                 print_introduction()
             else:
                 click.secho('Skip to initialize a project template.')
@@ -108,6 +109,18 @@ def init():
         except exc.CliException as ex:
             print_error('{}: {}'.format(ex.__class__.__name__, ex))
             break
+
+
+@cli.command()
+def init():
+    '''Initialize project'''
+    create_project()
+
+
+@cli.command(name='new')
+def new_project():
+    '''Create new Bothub project'''
+    create_project(True)
 
 
 @cli.command()
