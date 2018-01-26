@@ -13,9 +13,11 @@ import requests
 import tarfile
 
 from bothub_cli import __version__
+from bothub_client import __version__ as sdk_version
 from bothub_cli import exceptions as exc
 
 PYPI_VERSION_PATTERN = re.compile(r'bothub_cli-(.+?)-py2.py3-none-any.whl')
+PYPI_VERSION_PATTERN_SDK = re.compile(r'bothub-(.+?)-py2.py3-none-any.whl')
 PACKAGE_IGNORE_PATTERN = [
     re.compile('.bothub-meta'),
     re.compile('dist'),
@@ -36,7 +38,7 @@ class Cache(object):
             return None
         content = read_content_from_file(self.cache_path)
         cache_entry = yaml.load(content)
-        if not cache_entry:
+        if not cache_entry or not (key in cache_entry):
             return None
         entry = cache_entry[key]
         now = datetime.now()
@@ -74,7 +76,8 @@ def read_content_from_file(path):
             return fin.read()
 
 
-def find_versions(content):
+def find_versions(content, sdk=False):
+    if sdk: return set(PYPI_VERSION_PATTERN_SDK.findall(content))
     return set(PYPI_VERSION_PATTERN.findall(content))
 
 
@@ -94,19 +97,26 @@ def get_latest_version(versions):
     return sorted_versions[0]
 
 
-def get_latest_version_from_pypi(use_cache=True, cache=None):
+def get_latest_version_from_pypi(use_cache=True, cache=None, sdk=False):
+    catch_label = 'latest_pypi_version'
+    url = 'https://pypi.python.org/simple/bothub-cli'
+    if sdk:
+        catch_label = 'sdk_latest_pypi_version'
+        url = 'https://pypi.python.org/simple/bothub'
+
     try:
         if use_cache:
             _cache = cache or Cache()
-            latest_version = _cache.get('latest_pypi_version')
+            latest_version = _cache.get(catch_label)
             if latest_version:
                 return latest_version
-        response = requests.get('https://pypi.python.org/simple/bothub-cli', timeout=2)
+
+        response = requests.get(url, timeout=2)
         content = response.content.decode('utf8')
-        versions = find_versions(content)
+        versions = find_versions(content, sdk)
         latest_version = get_latest_version(versions)
         if use_cache:
-            _cache.set('latest_pypi_version', latest_version)
+            _cache.set(catch_label, latest_version)
         return latest_version
     except requests.exceptions.Timeout:
         raise exc.Timeout()
@@ -122,6 +132,15 @@ def check_latest_version():
     except exc.Timeout:
         pass
 
+def check_latest_version_sdk():
+    try:
+        pypi_version = get_latest_version_from_pypi(sdk=True)
+        is_latest = cmp_versions(sdk_version, pypi_version) >= 0
+        if not is_latest:
+            raise exc.NotLatestVersionSdk(sdk_version, pypi_version)
+
+    except exc.Timeout:
+        pass
 
 def timestamp(dt=None):
     dt = dt or datetime.utcnow()

@@ -107,6 +107,16 @@ class NotLatestVersion(CliException):
         super(NotLatestVersion, self).__init__(msg)
 
 
+class NotLatestVersionSdk(CliException):
+    def __init__(self, current_version, latest_version):
+        msg = "New bothub version has detected. You have {} and pypi has {}. "\
+              "Please upgrade the package: 'pip install --upgrade bothub'.".format(
+                  current_version,
+                  latest_version
+              )
+        super(NotLatestVersionSdk, self).__init__(msg)
+
+
 class TargetDirectoryDuplicated(CliException):
     def __init__(self, target_dir):
         msg = "Target directory {} already exists. Try with another target directory".format(target_dir)

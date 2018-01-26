@@ -45,7 +45,10 @@ def cli(ctx, version):
     and deploy bot codes to BotHub.Studio service'''
     try:
         utils.check_latest_version()
+        utils.check_latest_version_sdk()
     except exc.NotLatestVersion as ex:
+        click.secho(str(ex), fg='yellow')
+    except exc.NotLatestVersionSdk as ex:
         click.secho(str(ex), fg='yellow')
 
     if version:
