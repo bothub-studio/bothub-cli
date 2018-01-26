@@ -177,7 +177,7 @@ def add_option_to_dict(d, option_name, option):
     if option:
         d[option_name] = option
 
-def ask_channel_keys(param_list, **kwargs) :
+def ask_channel_keys(param_list) :
     credentials = {}
     for param in param_list:
         title = param['name'].replace('_', ' ').title()
@@ -218,7 +218,7 @@ def add_channel(channel, api_key, app_id, app_secret, page_access_token):
             ]
         }
 
-        credentials = ask_channel_keys(channel_list[channel], **channel_list)
+        credentials = ask_channel_keys(channel_list[channel])
         lib_cli = lib.Cli()
         lib_cli.add_channel(channel, credentials)
         click.secho('Added a channel {}'.format(channel))
