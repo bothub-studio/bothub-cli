@@ -5,6 +5,7 @@ import os
 import json
 import click
 import re
+import pprint
 from terminaltables import AsciiTable as Table
 try:
     from json import JSONDecodeError
@@ -26,16 +27,20 @@ def print_success(msg):
 def print_message(msg=''):
     click.echo(msg)
 
-def print_introduction():
-    color = 'green'
-    click.secho('Step 1: bothub configure', fg=color)
-    click.echo ('-- Configure account credential')
-    click.secho('Step 2: bothub init', fg=color)
-    click.echo ('-- Create a minimum bot project in https://app.bothub.studio/ and clone to your local machine.')
-    click.secho('Step 3: bothub test', fg=color)
-    click.echo ('-- goto your new project directory and run `bothub test`')
-    click.secho('Setp 4: bothub deploy', fg=color)
-    click.echo ('-- change some code in bot.py than run `bothub deploy` to https://app.bothub.studio/')
+def print_introduction(n=1):
+    commands = [
+        ('Step 1: bothub configure', '-- Configure account credential'),
+        ('Step 2: bothub new', '-- Create a minimum bot project in https://app.bothub.studio/ and clone to your local machine.'),
+        ('Step 3: bothub test', '-- goto your new project directory and run `bothub test`'),
+        ('Setp 4: bothub deploy', '-- change some code in bot.py than run `bothub deploy` to https://app.bothub.studio/'),
+    ]
+    i = 0
+    for command, description in commands :
+        i += 1
+        if i < n:
+            continue
+        click.secho(command, fg='green')
+        click.secho(description)
 
 @click.group(invoke_without_command=True)
 @click.option('-V', '--version', is_flag=True, default=False)
@@ -76,6 +81,7 @@ def configure():
         lib_cli = lib.Cli()
         lib_cli.authenticate(username, password)
         click.secho('Identified. Welcome {}.'.format(username), fg='green')
+        print_introduction(2)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -118,12 +124,14 @@ def create_project(create_dir=False):
 def init():
     '''Initialize project'''
     create_project()
+    print_introduction(3)
 
 
 @cli.command(name='new')
 def new_project():
     '''Create new Bothub project'''
     create_project(True)
+    print_introduction(3)
 
 
 @cli.command()
@@ -411,6 +419,7 @@ def test():
     try:
         lib_cli = lib.Cli(print_message=print_message)
         lib_cli.test()
+        print_introduction(4)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
