@@ -5,7 +5,6 @@ import os
 import json
 import click
 import re
-import pprint
 from terminaltables import AsciiTable as Table
 try:
     from json import JSONDecodeError
@@ -27,18 +26,14 @@ def print_success(msg):
 def print_message(msg=''):
     click.echo(msg)
 
-def print_introduction(n=1):
+def print_introduction(start_line=0):
     commands = [
         ('Step 1: bothub configure', '-- Configure account credential'),
         ('Step 2: bothub new', '-- Create a minimum bot project in https://app.bothub.studio/ and clone to your local machine.'),
         ('Step 3: bothub test', '-- goto your new project directory and run `bothub test`'),
         ('Setp 4: bothub deploy', '-- change some code in bot.py than run `bothub deploy` to https://app.bothub.studio/'),
     ]
-    i = 0
-    for command, description in commands :
-        i += 1
-        if i < n:
-            continue
+    for command, description in commands[start_line:] :
         click.secho(command, fg='green')
         click.secho(description)
 
@@ -81,7 +76,7 @@ def configure():
         lib_cli = lib.Cli()
         lib_cli.authenticate(username, password)
         click.secho('Identified. Welcome {}.'.format(username), fg='green')
-        print_introduction(2)
+        print_introduction(1)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -124,14 +119,14 @@ def create_project(create_dir=False):
 def init():
     '''Initialize project'''
     create_project()
-    print_introduction(3)
+    print_introduction(2)
 
 
 @cli.command(name='new')
 def new_project():
     '''Create new Bothub project'''
     create_project(True)
-    print_introduction(3)
+    print_introduction(2)
 
 
 @cli.command()
@@ -419,7 +414,7 @@ def test():
     try:
         lib_cli = lib.Cli(print_message=print_message)
         lib_cli.test()
-        print_introduction(4)
+        print_introduction(3)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
