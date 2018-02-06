@@ -27,20 +27,20 @@ def print_success(msg):
 def print_message(msg=''):
     click.echo(msg)
 
-def print_introduction(n=1):
+def print_introduction(step=1):
     commands = [
-        ('Step 1: bothub configure', '-- Configure account credential'),
-        ('Step 2: bothub new', '-- Create a minimum bot project in https://app.bothub.studio/ and clone to your local machine.'),
-        ('Step 3: bothub test', '-- goto your new project directory and run `bothub test`'),
-        ('Setp 4: bothub deploy', '-- change some code in bot.py than run `bothub deploy` to https://app.bothub.studio/'),
+        ('bothub configure', '-- Configure an account credential'),
+        ('bothub new', '-- Create an blank project'),
+        ('bothub test', '-- Enter to the newly created project directory and run `bothub test`'),
+        ('bothub deploy', '-- Write your code in `bot.py` and run `bothub deploy` to deploy it'),
     ]
-    i = 0
-    for command, description in commands :
-        i += 1
-        if i < n:
-            continue
-        click.secho(command, fg='green')
-        click.secho(description)
+
+    click.secho('What can you do next?', fg='green')
+    click.secho('')
+
+    for index, (command, description) in enumerate(commands[step-1:], 1):
+        click.secho('Step {}: {}'.format(index, command), fg='green')
+        click.secho(' ' * 2 + description)
 
 @click.group(invoke_without_command=True)
 @click.option('-V', '--version', is_flag=True, default=False)
