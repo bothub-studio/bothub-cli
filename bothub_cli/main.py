@@ -81,6 +81,7 @@ def configure():
         lib_cli = lib.Cli()
         lib_cli.authenticate(username, password)
         click.secho('Identified. Welcome {}.'.format(username), fg='green')
+        click.echo('')
         print_introduction(2)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
@@ -107,6 +108,7 @@ def create_project(create_dir=False):
                 if create_dir:
                     target_dir = normalized_name
                 lib_cli.clone(normalized_name, target_dir=target_dir)
+                click.echo('')
                 print_introduction()
             else:
                 click.secho('Skip to initialize a project template.')
