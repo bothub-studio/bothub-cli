@@ -201,9 +201,9 @@ class Cli(object):
         self.print_message("+++++++++++++++++++++++")
         self.print_message("Commands:")
         commands = [
-           ("help", "Print help menu"),
-           ("location", "Send user location"),
-           ("exit", "Exit the Test console"),
+            ("help", "Print help menu"),
+            ("location", "Send user location"),
+            ("exit", "Exit the Test console"),
         ]
         max_len = max([len(command) for command, _ in commands])
         template_string = "/{0}:{2}{1}"
@@ -224,11 +224,11 @@ class Cli(object):
                 line = prompt('BotHub> ', history=history)
                 if not line:
                     continue
-                if line.startswith('/help') :
+                if line.startswith('/help'):
                     self.show_help()
                 elif line.startswith('/exit'):
                     break
-                else :
+                else:
                     event = make_event(line)
                     context = {}
                     bot.handle_message(event, context)
