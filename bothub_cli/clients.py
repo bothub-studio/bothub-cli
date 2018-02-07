@@ -18,12 +18,12 @@ class ExternalHttpStorageClient(object):
                               'https://api.bothub.studio/api')
     properties = {}
     new_properties = {}
+    request_data = True
 
     def __init__(self, access_token, project_id, user=None):
         self.access_token = access_token
         self.project_id = project_id
         self.current_user = user or ('console', 1)
-        self.properties = self.get_project_data_latest()
 
     def get_headers(self):
         return {
@@ -58,6 +58,10 @@ class ExternalHttpStorageClient(object):
         return response.json()['data']
 
     def get_project_data(self, key=None):
+        if self.request_data:
+            self.properties = self.get_project_data_latest()
+            self.properties.update(self.new_properties)
+            self.request_data = False
         if key and key in self.properties:
             return self.properties[key]
         return self.properties
