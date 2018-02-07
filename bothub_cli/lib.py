@@ -203,6 +203,7 @@ class Cli(object):
         commands = [
            ("help", "Print help menu"),
            ("location", "Send user location"),
+           ("updateproperties", "Update local project properties from server."),
            ("exit", "Exit the Test console"),
         ]
         max_len = max([len(command) for command, _ in commands])
@@ -226,6 +227,8 @@ class Cli(object):
                     continue
                 if line.startswith('/help') :
                     self.show_help()
+                elif line.startswith('/updateproperties') :
+                    bot.load_project_data()
                 elif line.startswith('/exit'):
                     break
                 else :
@@ -236,6 +239,7 @@ class Cli(object):
                 break
             except Exception:
                 traceback.print_exc()
+        bot.update_project_data()
 
     def add_nlu(self, nlu, credentials):
         self._load_auth()

@@ -16,11 +16,14 @@ class ConsoleChannelClient(object):
 class ExternalHttpStorageClient(object):
     base_url = os.environ.get('BOTHUB_API_BASE_URL',
                               'https://api.bothub.studio/api')
+    properties = {}
+    new_properties = {}
 
     def __init__(self, access_token, project_id, user=None):
         self.access_token = access_token
         self.project_id = project_id
         self.current_user = user or ('console', 1)
+        self.properties = self.get_project_data_latest()
 
     def get_headers(self):
         return {
@@ -28,22 +31,36 @@ class ExternalHttpStorageClient(object):
             'Content-Type': 'application/json'
         }
 
-    def set_project_data(self, data):
-        headers = self.get_headers()
-        response = requests.post(
-            '{}/projects/{}/properties'.format(self.base_url, self.project_id),
-            json={'data': data},
-            headers=headers
-        )
-        return response.json()['data']
+    def update_project_data(self):
+        if self.new_properties:
+            headers = self.get_headers()
+            response = requests.post(
+                '{}/projects/{}/properties'.format(self.base_url, self.project_id),
+                json={'data': self.new_properties},
+                headers=headers
+            )
+            return response.json()['data']
+        return self.properties
 
-    def get_project_data(self, key=None):
+    def set_project_data(self, data):
+        self.new_properties.update(data)
+        self.properties.update(data)
+        return self.new_properties
+
+    def load_project_data(self):
+        self.properties = self.get_project_data_latest()
+        self.properties.update(self.new_properties)
+
+    def get_project_data_latest(self):
         url = '{}/projects/{}/properties'.format(self.base_url, self.project_id)
-        if key:
-            url += '/{}'.format(key)
         headers = self.get_headers()
         response = requests.get(url, headers=headers)
         return response.json()['data']
+
+    def get_project_data(self, key=None):
+        if key and key in self.properties:
+            return self.properties[key]
+        return self.properties
 
     def set_user_data(self, channel, user_id, data):
         headers = self.get_headers()
