@@ -28,14 +28,17 @@ def print_message(msg=''):
 
 def print_introduction(start_line=0):
     commands = [
-        ('Step 1: bothub configure', '-- Configure account credential'),
-        ('Step 2: bothub new', '-- Create a minimum bot project in https://app.bothub.studio/ and clone to your local machine.'),
-        ('Step 3: bothub test', '-- goto your new project directory and run `bothub test`'),
-        ('Setp 4: bothub deploy', '-- change some code in bot.py than run `bothub deploy` to https://app.bothub.studio/'),
+        ('bothub configure', '-- Configure an account credential'),
+        ('bothub new', '-- Create an blank project'),
+        ('bothub test', '-- Enter to the newly created project directory and run `bothub test`'),
+        ('bothub deploy', '-- Write your code in `bot.py` and run `bothub deploy` to deploy it'),
     ]
-    for command, description in commands[start_line:] :
-        click.secho(command, fg='green')
-        click.secho(description)
+    click.secho('What can you do next?', fg='green')
+    click.secho('')
+
+    for index, (command, description) in enumerate(commands[start_line:], 1):
+        click.secho('Step {}: {}'.format(index, command), fg='green')
+        click.secho(' ' * 2 + description)
 
 @click.group(invoke_without_command=True)
 @click.option('-V', '--version', is_flag=True, default=False)
@@ -76,6 +79,7 @@ def configure():
         lib_cli = lib.Cli()
         lib_cli.authenticate(username, password)
         click.secho('Identified. Welcome {}.'.format(username), fg='green')
+        click.echo('')
         print_introduction(1)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
@@ -99,8 +103,10 @@ def create_project(create_dir=False):
                 lib_cli.init_code()
                 click.secho('Download project template.')
                 target_dir = '.'
-                if create_dir: target_dir=normalized_name
+                if create_dir:
+                    target_dir = normalized_name
                 lib_cli.clone(normalized_name, target_dir=target_dir)
+                click.echo('')
                 print_introduction()
             else:
                 click.secho('Skip to initialize a project template.')
@@ -196,7 +202,8 @@ def add_option_to_dict(d, option_name, option):
     if option:
         d[option_name] = option
 
-def ask_channel_keys(param_list) :
+
+def ask_channel_keys(param_list):
     credentials = {}
     for param in param_list:
         title = param['name'].replace('_', ' ').title()
@@ -208,10 +215,11 @@ def ask_channel_keys(param_list) :
                 print_success('{} is saved'.format(title))
                 break
             elif param['value']:
-                valid_msg=' a valid'
+                valid_msg = ' a valid'
                 print_error("{} is invalid".format(title))
             param['value'] = click.prompt(param['prompt'].format(valid_msg, title))
     return credentials
+
 
 @channel.command(name='add')
 @click.argument('channel', default='')
@@ -224,16 +232,16 @@ def add_channel(channel, api_key, app_id, app_secret, page_access_token):
     try:
         credentials = {}
         if not channel in ['telegram', 'facebook']:
-            channel = click.prompt('Channel name (facebook, telegram)', type=click.Choice(['facebook', 'telegram']))
+            channel = click.prompt('Choose a channel to add: [facebook, telegram]', type=click.Choice(['facebook', 'telegram']))
 
         channel_list = {
             'telegram': [
-                {'name':'api_key','value': api_key, 'prompt': 'Please enter{} Telegram {}', 'rule': r'[0-9]{9}:[\w.-]{35}'},
+                {'name': 'api_key', 'value': api_key, 'prompt': 'Please enter{} Telegram {}', 'rule': r'[0-9]{9}:[\w.-]{35}'},
             ],
             'facebook': [
-                {'name':'app_id','value': app_id, 'prompt': 'Please enter{} Facebook {}', 'rule':r'[0-9]{6,20}'},
-                {'name':'app_secret' , 'value': app_secret, 'prompt': 'Please enter{} Facebook {}', 'rule':r'[a-zA-Z0-9]{12,}'},
-                {'name':'page_access_token' , 'value': page_access_token, 'prompt': 'Please enter{} Facebook {}', 'rule':r'[a-zA-Z0-9]{100,}'},
+                {'name': 'app_id', 'value': app_id, 'prompt': 'Please enter{} Facebook {}', 'rule': r'[0-9]{6,20}'},
+                {'name': 'app_secret', 'value': app_secret, 'prompt': 'Please enter{} Facebook {}', 'rule': r'[a-zA-Z0-9]{12,}'},
+                {'name': 'page_access_token', 'value': page_access_token, 'prompt': 'Please enter{} Facebook {}', 'rule': r'[a-zA-Z0-9]{100,}'},
             ]
         }
 

@@ -40,7 +40,7 @@ class ExternalHttpStorageClient(object):
                 headers=headers
             )
             return response.json()['data']
-        return self.properties
+        return {}
 
     def set_project_data(self, data):
         self.new_properties.update(data)
