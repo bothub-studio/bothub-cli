@@ -342,14 +342,31 @@ def get_property(key):
 
 
 @property.command(name='set')
-@click.argument('key')
-@click.argument('value')
-def set_property(key, value):
+@click.argument('key', default='', )
+@click.argument('value', default='')
+@click.option('--file', type=click.File('r'))
+def set_property(key, value, file):
     '''Set value of a property'''
     try:
         lib_cli = lib.Cli()
-        lib_cli.set_properties(key, value)
-        click.secho("Set a property: {}".format(key))
+        if value:
+            lib_cli.set_properties(key, value)
+            click.secho("Set a property: {}".format(key))
+        elif key and file:
+            value = lib_cli.read_property_file(file)
+            lib_cli.set_properties(key, str(value))
+            click.secho("Set a property: {}".format(key))
+        elif file:
+            value = lib_cli.read_property_file(file)
+            for key in value:
+                lib_cli.set_properties(key, str(value[key]))
+                click.secho("Set a property: {}".format(key))
+        else :
+            if not key:
+                key = click.prompt('key')
+            value = click.prompt('value')
+            lib_cli.set_properties(key, value)
+            click.secho("Set a property: {}".format(key))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 

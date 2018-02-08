@@ -7,6 +7,7 @@ import sys
 import json
 import time
 import traceback
+import yaml
 
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
@@ -194,6 +195,12 @@ class Cli(object):
             self.project_property.save()
         project_id = self._get_current_project_id()
         self.api.delete_project_property(project_id, key)
+
+    def read_property_file(self, file):
+        try:
+            return yaml.load(file)
+        except:
+            raise exc.InvalidJsonFormat()
 
     def show_help(self):
         self.print_message()

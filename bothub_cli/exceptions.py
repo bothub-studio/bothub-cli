@@ -46,6 +46,8 @@ class NoCredential(CliException):
 class Duplicated(CliException):
     pass
 
+class InvalidJsonFormat(CliException):
+    pass
 
 class ProjectNameDuplicated(Duplicated):
     def __init__(self, name):
