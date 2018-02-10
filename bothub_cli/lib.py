@@ -225,7 +225,9 @@ class Cli(object):
         history = FileHistory('.history')
 
         project_id = self._get_current_project_id()
-        bot = self._load_bot()
+        bot_meta = self._load_bot()
+        bot = bot_meta['bot']
+        storage_client = bot_meta['storage_client']
         self.show_help()
         while True:
             try:
@@ -235,7 +237,7 @@ class Cli(object):
                 if line.startswith('/help'):
                     self.show_help()
                 elif line.startswith('/updateproperties'):
-                    bot.load_project_data()
+                    storage_client.load_project_data()
                 elif line.startswith('/exit'):
                     break
                 else:
@@ -246,7 +248,7 @@ class Cli(object):
                 break
             except Exception:
                 traceback.print_exc()
-        bot.update_project_data()
+        storage_client.update_project_data()
 
     def add_nlu(self, nlu, credentials):
         self._load_auth()
@@ -337,4 +339,5 @@ class Cli(object):
             nlu_client_factory=nlu_client_factory,
             event=event
         )
-        return bot
+        return {'bot': bot, 'channel_client': channel_client, 'storage_client': storage_client,
+                'nlu_client_factory': nlu_client_factory}
