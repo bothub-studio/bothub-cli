@@ -13,22 +13,12 @@ class ConsoleChannelClient(object):
         print('{}{}'.format(_channel, message))
 
 
-class ExternalHttpStorageClient(object):
-    base_url = os.environ.get('BOTHUB_API_BASE_URL',
-                              'https://api.bothub.studio/api')
-    def __init__(self, access_token, project_id, user=None):
-        self.access_token = access_token
-        self.project_id = project_id
-        self.current_user = user or ('console', 1)
+class CachedStorageClient(object):
+    def __init__(self, storage_client):
+        self.storage_client = storage_client
         self.properties = {}
         self.new_properties = {}
         self.request_data = True
-
-    def get_headers(self):
-        return {
-            'Authorization': 'Bearer {}'.format(self.access_token),
-            'Content-Type': 'application/json'
-        }
 
     def set_project_data(self, data):
         self.new_properties.update(data)
@@ -37,12 +27,62 @@ class ExternalHttpStorageClient(object):
 
     def get_project_data(self, key=None):
         if self.request_data:
-            self.properties = self.get_project_data_latest()
+            self.properties = self.storage_client.get_project_data()
             self.properties.update(self.new_properties)
             self.request_data = False
-        if key and key in self.properties:
+        if key is not None and key in self.properties:
             return self.properties[key]
         return self.properties
+
+    def set_user_data(self, channel, user_id, data):
+        return self.storage_client.set_user_data(channel, user_id, data)
+
+    def get_user_data(self, channel, user_id, key=None):
+        return self.storage_client.get_user_data(channel, user_id, key)
+
+    def set_current_user_data(self, data):
+        return self.storage_client.set_current_user_data(data)
+
+    def get_current_user_data(self, key=None):
+        return self.storage_client.get_current_user_data(key=key)
+
+    def load_project_data(self):
+        self.properties = self.storage_client.get_project_data()
+        self.properties.update(self.new_properties)
+
+    def store_project_data(self):
+        if self.new_properties:
+            self.storage_client.set_project_data(self.new_properties)
+
+
+class ExternalHttpStorageClient(object):
+    base_url = os.environ.get('BOTHUB_API_BASE_URL',
+                              'https://api.bothub.studio/api')
+    def __init__(self, access_token, project_id, user=None):
+        self.access_token = access_token
+        self.project_id = project_id
+        self.current_user = user or ('console', 1)
+
+    def get_headers(self):
+        return {
+            'Authorization': 'Bearer {}'.format(self.access_token),
+            'Content-Type': 'application/json'
+        }
+
+    def set_project_data(self, data):
+        headers = self.get_headers()
+        response = requests.post(
+            '{}/projects/{}/properties'.format(self.base_url, self.project_id),
+            json={'data': data},
+            headers=headers
+        )
+        return response.json()['data']
+
+    def get_project_data(self):
+        url = '{}/projects/{}/properties'.format(self.base_url, self.project_id)
+        headers = self.get_headers()
+        response = requests.get(url, headers=headers)
+        return response.json()['data']
 
     def set_user_data(self, channel, user_id, data):
         headers = self.get_headers()
@@ -72,24 +112,3 @@ class ExternalHttpStorageClient(object):
     def get_current_user_data(self, key=None):
         channel, user_id = self.current_user
         return self.get_user_data(channel, user_id, key=key)
-
-    def update_project_data(self):
-        if self.new_properties:
-            headers = self.get_headers()
-            response = requests.post(
-                '{}/projects/{}/properties'.format(self.base_url, self.project_id),
-                json={'data': self.new_properties},
-                headers=headers
-            )
-            return response.json()['data']
-        return {}
-
-    def load_project_data(self):
-        self.properties = self.get_project_data_latest()
-        self.properties.update(self.new_properties)
-
-    def get_project_data_latest(self):
-        url = '{}/projects/{}/properties'.format(self.base_url, self.project_id)
-        headers = self.get_headers()
-        response = requests.get(url, headers=headers)
-        return response.json()['data']

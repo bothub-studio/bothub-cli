@@ -21,6 +21,7 @@ from bothub_cli.config import ProjectConfig
 from bothub_cli.config import ProjectMeta
 from bothub_cli.config import ProjectProperty
 from bothub_cli.clients import ConsoleChannelClient
+from bothub_cli.clients import CachedStorageClient
 from bothub_cli.clients import ExternalHttpStorageClient
 from bothub_cli.utils import safe_mkdir
 from bothub_cli.utils import read_content_from_file
@@ -227,7 +228,7 @@ class Cli(object):
         project_id = self._get_current_project_id()
         bot_meta = self._load_bot()
         bot = bot_meta['bot']
-        storage_client = bot_meta['storage_client']
+        storage_client = bot_meta['storage_client'] # type: CachedStorageClient
         self.show_help()
         while True:
             try:
@@ -248,7 +249,7 @@ class Cli(object):
                 break
             except Exception:
                 traceback.print_exc()
-        storage_client.update_project_data()
+        storage_client.store_project_data()
 
     def add_nlu(self, nlu, credentials):
         self._load_auth()
@@ -327,10 +328,11 @@ class Cli(object):
         context['nlu'] = dict([(nlu['nlu'], nlu['credentials']) for nlu in nlus])
 
         channel_client = ConsoleChannelClient()
-        storage_client = ExternalHttpStorageClient(
+        http_storage_client = ExternalHttpStorageClient(
             self.config.get('auth_token'),
             project_id,
         )
+        storage_client = CachedStorageClient(http_storage_client)
         nlu_client_factory = NluClientFactory(context)
         bot_class = get_bot_class(target_dir)
         bot = bot_class(
