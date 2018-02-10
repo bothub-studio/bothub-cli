@@ -16,14 +16,13 @@ class ConsoleChannelClient(object):
 class ExternalHttpStorageClient(object):
     base_url = os.environ.get('BOTHUB_API_BASE_URL',
                               'https://api.bothub.studio/api')
-    properties = {}
-    new_properties = {}
-    request_data = True
-
     def __init__(self, access_token, project_id, user=None):
         self.access_token = access_token
         self.project_id = project_id
         self.current_user = user or ('console', 1)
+        self.properties = {}
+        self.new_properties = {}
+        self.request_data = True
 
     def get_headers(self):
         return {
