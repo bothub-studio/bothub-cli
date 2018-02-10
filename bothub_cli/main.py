@@ -107,7 +107,6 @@ def create_project(create_dir=False):
                     target_dir = normalized_name
                 lib_cli.clone(normalized_name, target_dir=target_dir)
                 click.echo('')
-                print_introduction()
             else:
                 click.secho('Skip to initialize a project template.')
 
@@ -439,7 +438,6 @@ def test():
     try:
         lib_cli = lib.Cli(print_message=print_message)
         lib_cli.test()
-        print_introduction(3)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
