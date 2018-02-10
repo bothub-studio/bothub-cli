@@ -53,6 +53,7 @@ class CachedStorageClient(object):
     def store_project_data(self):
         if self.new_properties:
             self.storage_client.set_project_data(self.new_properties)
+        self.new_properties = {}
 
 
 class ExternalHttpStorageClient(object):
