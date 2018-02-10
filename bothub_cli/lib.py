@@ -230,6 +230,7 @@ class Cli(object):
         bot = bot_meta['bot']
         storage_client = bot_meta['storage_client'] # type: CachedStorageClient
         self.show_help()
+        storage_client.load_project_data()
         while True:
             try:
                 line = prompt('BotHub> ', history=history)

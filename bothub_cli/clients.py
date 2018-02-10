@@ -18,7 +18,6 @@ class CachedStorageClient(object):
         self.storage_client = storage_client
         self.properties = {}
         self.new_properties = {}
-        self.request_data = True
 
     def set_project_data(self, data):
         self.new_properties.update(data)
@@ -26,10 +25,6 @@ class CachedStorageClient(object):
         return self.new_properties
 
     def get_project_data(self, key=None):
-        if self.request_data:
-            self.properties = self.storage_client.get_project_data()
-            self.properties.update(self.new_properties)
-            self.request_data = False
         if key is not None:
             return self.properties.get(key)
         return self.properties
