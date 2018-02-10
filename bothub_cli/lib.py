@@ -216,12 +216,12 @@ class Cli(object):
             ("updateproperties", "Update local project properties from server"),
             ("exit", "Exit the test console"),
         ]
-        max_len = max([len(command) for command, _ in commands])
+        max_command_length = max([len(command) for command, _ in commands])
         template_string = "  /{0}{2}{1}"
         for command, description in commands:
-            nSpace = (max_len - len(command)) + 2 # 2 is extra spaces
-            width = ' ' * nSpace
-            self.print_message(template_string.format(command, description, width))
+            padding_width = (max_command_length - len(command)) + 2 # 2 is extra spaces
+            padding = ' ' * padding_width
+            self.print_message(template_string.format(command, description, padding))
         self.print_message()
 
     def test(self):
