@@ -30,8 +30,8 @@ class CachedStorageClient(object):
             self.properties = self.storage_client.get_project_data()
             self.properties.update(self.new_properties)
             self.request_data = False
-        if key is not None and key in self.properties:
-            return self.properties[key]
+        if key is not None:
+            return self.properties.get(key)
         return self.properties
 
     def set_user_data(self, channel, user_id, data):
