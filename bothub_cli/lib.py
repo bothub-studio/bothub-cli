@@ -205,21 +205,24 @@ class Cli(object):
 
     def show_help(self):
         self.print_message()
-        self.print_message("+ Bothub Test Console +")
-        self.print_message("+++++++++++++++++++++++")
+        self.print_message("Bothub Test Console")
+        self.print_message("-------------------")
+        self.print_message()
         self.print_message("Commands:")
+        self.print_message()
         commands = [
             ("help", "Print help menu"),
             ("location", "Send user location"),
-            ("updateproperties", "Update local project properties from server."),
+            ("updateproperties", "Update local project properties from server"),
             ("exit", "Exit the Test console"),
         ]
         max_len = max([len(command) for command, _ in commands])
-        template_string = "/{0}:{2}{1}"
+        template_string = "  /{0}{2}{1}"
         for command, description in commands:
             nSpace = (max_len - len(command)) + 2 # 2 is extra spaces
             width = ' ' * nSpace
             self.print_message(template_string.format(command, description, width))
+        self.print_message()
 
     def test(self):
         self._load_auth()
