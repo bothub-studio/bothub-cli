@@ -30,31 +30,10 @@ class ExternalHttpStorageClient(object):
             'Content-Type': 'application/json'
         }
 
-    def update_project_data(self):
-        if self.new_properties:
-            headers = self.get_headers()
-            response = requests.post(
-                '{}/projects/{}/properties'.format(self.base_url, self.project_id),
-                json={'data': self.new_properties},
-                headers=headers
-            )
-            return response.json()['data']
-        return {}
-
     def set_project_data(self, data):
         self.new_properties.update(data)
         self.properties.update(data)
         return self.new_properties
-
-    def load_project_data(self):
-        self.properties = self.get_project_data_latest()
-        self.properties.update(self.new_properties)
-
-    def get_project_data_latest(self):
-        url = '{}/projects/{}/properties'.format(self.base_url, self.project_id)
-        headers = self.get_headers()
-        response = requests.get(url, headers=headers)
-        return response.json()['data']
 
     def get_project_data(self, key=None):
         if self.request_data:
@@ -93,3 +72,24 @@ class ExternalHttpStorageClient(object):
     def get_current_user_data(self, key=None):
         channel, user_id = self.current_user
         return self.get_user_data(channel, user_id, key=key)
+
+    def update_project_data(self):
+        if self.new_properties:
+            headers = self.get_headers()
+            response = requests.post(
+                '{}/projects/{}/properties'.format(self.base_url, self.project_id),
+                json={'data': self.new_properties},
+                headers=headers
+            )
+            return response.json()['data']
+        return {}
+
+    def load_project_data(self):
+        self.properties = self.get_project_data_latest()
+        self.properties.update(self.new_properties)
+
+    def get_project_data_latest(self):
+        url = '{}/projects/{}/properties'.format(self.base_url, self.project_id)
+        headers = self.get_headers()
+        response = requests.get(url, headers=headers)
+        return response.json()['data']
