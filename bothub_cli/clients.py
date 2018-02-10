@@ -17,12 +17,12 @@ class CachedStorageClient(object):
     def __init__(self, storage_client):
         self.storage_client = storage_client
         self.properties = {}
-        self.new_properties = {}
+        self.updated_properties = {}
 
     def set_project_data(self, data):
-        self.new_properties.update(data)
+        self.updated_properties.update(data)
         self.properties.update(data)
-        return self.new_properties
+        return self.updated_properties
 
     def get_project_data(self, key=None):
         if key is not None:
@@ -43,12 +43,11 @@ class CachedStorageClient(object):
 
     def load_project_data(self):
         self.properties = self.storage_client.get_project_data()
-        self.properties.update(self.new_properties)
 
     def store_project_data(self):
-        if self.new_properties:
-            self.storage_client.set_project_data(self.new_properties)
-        self.new_properties = {}
+        if self.updated_properties:
+            self.storage_client.set_project_data(self.updated_properties)
+        self.updated_properties = {}
 
 
 class ExternalHttpStorageClient(object):
