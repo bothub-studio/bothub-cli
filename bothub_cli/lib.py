@@ -214,7 +214,7 @@ class Cli(object):
             ("help", "Print help menu"),
             ("location", "Send user location"),
             ("updateproperties", "Update local project properties from server"),
-            ("exit", "Exit the Test console"),
+            ("exit", "Exit the test console"),
         ]
         max_len = max([len(command) for command, _ in commands])
         template_string = "  /{0}{2}{1}"
