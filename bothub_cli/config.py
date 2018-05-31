@@ -43,7 +43,7 @@ class ConfigBase(object):
 
     def load(self):
         try:
-            with open(self.path) as fin:
+            with open(self.path, encoding='utf8') as fin:
                 self.config = yaml.load(fin)
         except IOError:
             raise exc.ImproperlyConfigured()
