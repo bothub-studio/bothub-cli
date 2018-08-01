@@ -246,8 +246,12 @@ def add_channel(channel, api_key, app_id, app_secret, page_access_token):
 
         credentials = ask_channel_keys(channel_list[channel])
         lib_cli = lib.Cli()
-        lib_cli.add_channel(channel, credentials)
+        result = lib_cli.add_channel(channel, credentials)
         click.secho('Added a channel {}'.format(channel))
+
+        if channel == 'kakao':
+            click.secho(result)
+
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 

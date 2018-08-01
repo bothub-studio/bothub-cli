@@ -10,6 +10,7 @@ import traceback
 import yaml
 
 from prompt_toolkit import prompt
+from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
 from bothub_client.clients import NluClientFactory
@@ -140,6 +141,9 @@ class Cli(object):
         self._load_auth()
         project_id = self._get_current_project_id()
         self.api.add_project_channel(project_id, channel, credentials)
+        if channel == 'kakao':
+            return "Please input below url to Kakao setting page.\n\n \
+            App URL: https://api.bothub.studio/api/projects/{}/webhooks/kakao\n".format(project_id)
 
     def ls_channel(self, verbose=False):
         self._load_auth()
@@ -227,6 +231,7 @@ class Cli(object):
     def test(self):
         self._load_auth()
         history = FileHistory('.history')
+        session = PromptSession(history=history)
 
         project_id = self._get_current_project_id()
         bot_meta = self._load_bot()
@@ -236,7 +241,7 @@ class Cli(object):
         storage_client.load_project_data()
         while True:
             try:
-                line = prompt('BotHub> ', history=history)
+                line = session.prompt('BotHub> ')
                 if not line:
                     continue
                 if line.startswith('/help'):
