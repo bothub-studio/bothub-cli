@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import (absolute_import, division, print_function)
-
 import os
 import json
 import click
+import re
 from terminaltables import AsciiTable as Table
 try:
     from json import JSONDecodeError
@@ -20,6 +20,25 @@ from bothub_cli import exceptions as exc
 def print_error(msg):
     click.secho(msg, fg='red')
 
+def print_success(msg):
+    click.secho(msg, fg='green')
+
+def print_message(msg=''):
+    click.echo(msg)
+
+def print_introduction(start_line=0):
+    commands = [
+        ('bothub configure', '-- Configure an account credential'),
+        ('bothub new', '-- Create an blank project'),
+        ('bothub test', '-- Enter to the newly created project directory and run `bothub test`'),
+        ('bothub deploy', '-- Write your code in `bot.py` and run `bothub deploy` to deploy it'),
+    ]
+    click.secho('What can you do next?', fg='green')
+    click.secho('')
+
+    for index, (command, description) in enumerate(commands[start_line:], 1):
+        click.secho('Step {}: {}'.format(index, command), fg='green')
+        click.secho(' ' * 2 + description)
 
 @click.group(invoke_without_command=True)
 @click.option('-V', '--version', is_flag=True, default=False)
@@ -29,7 +48,10 @@ def cli(ctx, version):
     and deploy bot codes to BotHub.Studio service'''
     try:
         utils.check_latest_version()
+        utils.check_latest_version_sdk()
     except exc.NotLatestVersion as ex:
+        click.secho(str(ex), fg='yellow')
+    except exc.NotLatestVersionSdk as ex:
         click.secho(str(ex), fg='yellow')
 
     if version:
@@ -39,6 +61,12 @@ def cli(ctx, version):
     if ctx.invoked_subcommand is None:
         print(ctx.get_help())
 
+@cli.command()
+def introduction():
+    '''
+    Introduction Guide
+    '''
+    print_introduction()
 
 @cli.command()
 def configure():
@@ -51,13 +79,13 @@ def configure():
         lib_cli = lib.Cli()
         lib_cli.authenticate(username, password)
         click.secho('Identified. Welcome {}.'.format(username), fg='green')
+        click.echo('')
+        print_introduction(1)
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 
-@cli.command()
-def init():
-    '''Initialize project'''
+def create_project(create_dir=False):
     click.echo('Initialize a new project.')
     while True:
         try:
@@ -74,7 +102,11 @@ def init():
                 click.secho('Initialize project template.')
                 lib_cli.init_code()
                 click.secho('Download project template.')
-                lib_cli.clone(normalized_name, target_dir='.')
+                target_dir = '.'
+                if create_dir:
+                    target_dir = normalized_name
+                lib_cli.clone(normalized_name, target_dir=target_dir)
+                click.echo('')
             else:
                 click.secho('Skip to initialize a project template.')
 
@@ -86,6 +118,20 @@ def init():
         except exc.CliException as ex:
             print_error('{}: {}'.format(ex.__class__.__name__, ex))
             break
+
+
+@cli.command()
+def init():
+    '''Initialize project'''
+    create_project()
+    print_introduction(2)
+
+
+@cli.command(name='new')
+def new_project():
+    '''Create new Bothub project'''
+    create_project(True)
+    print_introduction(2)
 
 
 @cli.command()
@@ -104,6 +150,7 @@ def deploy(max_retries):
 @click.argument('project-name')
 def clone(project_name):
     '''Clone existing project'''
+
     try:
         lib_cli = lib.Cli()
         lib_cli.clone(project_name)
@@ -155,20 +202,49 @@ def add_option_to_dict(d, option_name, option):
         d[option_name] = option
 
 
+def ask_channel_keys(param_list):
+    credentials = {}
+    for param in param_list:
+        title = param['name'].replace('_', ' ').title()
+        valid_msg = ''
+        while True:
+            matches = re.match(param['rule'], param['value'])
+            if matches:
+                credentials[param['name']] = matches.group()
+                print_success('{} is saved'.format(title))
+                break
+            elif param['value']:
+                valid_msg = ' a valid'
+                print_error("{} is invalid".format(title))
+            param['value'] = click.prompt(param['prompt'].format(valid_msg, title))
+    return credentials
+
+
 @channel.command(name='add')
-@click.argument('channel')
-@click.option('--api-key')
-@click.option('--app-id')
-@click.option('--app-secret')
-@click.option('--page-access-token')
+@click.argument('channel', default='')
+@click.option('--api-key', help='Telegram api key', default='')
+@click.option('--app-id', help='Facebook app id', default='')
+@click.option('--app-secret', help='Facebook app secret', default='')
+@click.option('--page-access-token', help='Facebook page access token', default='')
 def add_channel(channel, api_key, app_id, app_secret, page_access_token):
     '''Add a new channel to current project'''
     try:
         credentials = {}
-        add_option_to_dict(credentials, 'api_key', api_key)
-        add_option_to_dict(credentials, 'app_id', app_id)
-        add_option_to_dict(credentials, 'app_secret', app_secret)
-        add_option_to_dict(credentials, 'page_access_token', page_access_token)
+        if not channel in ['telegram', 'facebook']:
+            channel = click.prompt('Choose a channel to add: [facebook, telegram]', type=click.Choice(['facebook', 'telegram']))
+
+        channel_list = {
+            'telegram': [
+                {'name': 'api_key', 'value': api_key, 'prompt': 'Please enter{} Telegram {}', 'rule': r'[0-9]{9}:[\w.-]{35}'},
+            ],
+            'facebook': [
+                {'name': 'app_id', 'value': app_id, 'prompt': 'Please enter{} Facebook {}', 'rule': r'[0-9]{6,20}'},
+                {'name': 'app_secret', 'value': app_secret, 'prompt': 'Please enter{} Facebook {}', 'rule': r'[a-zA-Z0-9]{12,}'},
+                {'name': 'page_access_token', 'value': page_access_token, 'prompt': 'Please enter{} Facebook {}', 'rule': r'[a-zA-Z0-9]{100,}'},
+            ]
+        }
+
+        credentials = ask_channel_keys(channel_list[channel])
         lib_cli = lib.Cli()
         lib_cli.add_channel(channel, credentials)
         click.secho('Added a channel {}'.format(channel))
@@ -232,6 +308,21 @@ def ls_property():
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 
+@property.command(name='reload')
+def reload_property():
+    '''Reload property list from server'''
+    try:
+        lib_cli = lib.Cli()
+        properties = lib_cli.reload_properties()
+        properties_list = [(k, v) for k, v in properties.items()]
+        header = ['Name', 'Value']
+        data = [header] + properties_list
+        table = Table(data)
+        click.secho(table.table)
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
 @property.command(name='get')
 @click.argument('key')
 def get_property(key):
@@ -250,14 +341,31 @@ def get_property(key):
 
 
 @property.command(name='set')
-@click.argument('key')
-@click.argument('value')
-def set_property(key, value):
+@click.argument('key', default='', )
+@click.argument('value', default='')
+@click.option('--file', type=click.File('r'))
+def set_property(key, value, file):
     '''Set value of a property'''
     try:
         lib_cli = lib.Cli()
-        lib_cli.set_properties(key, value)
-        click.secho("Set a property: {}".format(key))
+        if value:
+            lib_cli.set_properties(key, value)
+            click.secho("Set a property: {}".format(key))
+        elif key and file:
+            value = lib_cli.read_property_file(file)
+            lib_cli.set_properties(key, str(value))
+            click.secho("Set a property: {}".format(key))
+        elif file:
+            value = lib_cli.read_property_file(file)
+            for key in value:
+                lib_cli.set_properties(key, str(value[key]))
+                click.secho("Set a property: {}".format(key))
+        else :
+            if not key:
+                key = click.prompt('key')
+            value = click.prompt('value')
+            lib_cli.set_properties(key, value)
+            click.secho("Set a property: {}".format(key))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -328,7 +436,7 @@ def rm_nlu(nlu):
 def test():
     '''Run test chat session'''
     try:
-        lib_cli = lib.Cli()
+        lib_cli = lib.Cli(print_message=print_message)
         lib_cli.test()
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')

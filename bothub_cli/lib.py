@@ -7,6 +7,7 @@ import sys
 import json
 import time
 import traceback
+import yaml
 
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
@@ -18,7 +19,9 @@ from bothub_cli.api import Api
 from bothub_cli.config import Config
 from bothub_cli.config import ProjectConfig
 from bothub_cli.config import ProjectMeta
+from bothub_cli.config import ProjectProperty
 from bothub_cli.clients import ConsoleChannelClient
+from bothub_cli.clients import CachedStorageClient
 from bothub_cli.clients import ExternalHttpStorageClient
 from bothub_cli.utils import safe_mkdir
 from bothub_cli.utils import read_content_from_file
@@ -31,15 +34,18 @@ from bothub_cli.utils import get_bot_class
 
 class Cli(object):
     '''A CLI class represents '''
-    def __init__(self, api=None, config=None, project_config=None, project_meta=None):
+    def __init__(self, api=None, config=None, project_config=None, project_meta=None, project_property=None, print_error=None, print_message=None):
         self.api = api or Api()
         self.config = config or Config()
         self.project_config = project_config or ProjectConfig()
         self.project_meta = project_meta or ProjectMeta()
-
+        self.project_property = project_property or ProjectProperty()
         if not self.project_meta.is_exists() and self.project_config.is_exists():
             self.project_config.load()
             self.project_meta.migrate_from_project_config(self.project_config)
+
+        self.print_error = print_error or print
+        self.print_message = print_message or print
 
     def authenticate(self, username, password):
         token = self.api.authenticate(username, password)
@@ -54,6 +60,8 @@ class Cli(object):
         self.project_meta.set('id', project_id)
         self.project_meta.set('name', name)
         self.project_meta.save()
+        self.project_property.config = {}
+        self.project_property.save()
 
         self.project_config.set('programming-language', programming_language)
         self.project_config.save()
@@ -147,15 +155,24 @@ class Cli(object):
         self.api.delete_project_channels(project_id, channel)
 
     def ls_properties(self):
+        self.project_property.load()
+        return self.project_property.config
+
+    def reload_properties(self):
         self._load_auth()
         project_id = self._get_current_project_id()
-        return self.api.get_project_property(project_id)
+        properties = self.api.get_project_property(project_id)
+        if not properties:
+            self.project_property.config = {}
+            self.project_property.save()
+        for k in properties:
+            self.project_property.set(k,properties[k])
+            self.project_property.save()
+        return properties
 
     def get_properties(self, key):
-        self._load_auth()
-        project_id = self._get_current_project_id()
-        data = self.api.get_project_property(project_id)
-        return data[key]
+        self.project_property.load()
+        return self.project_property.config[key]
 
     def set_properties(self, key, value):
         try:
@@ -163,34 +180,80 @@ class Cli(object):
         except ValueError:
             _value = value
 
+        self.project_property.load()
+        self.project_property.set(key,value)
+        self.project_property.save()
+
         self._load_auth()
         project_id = self._get_current_project_id()
         return self.api.set_project_property(project_id, key, _value)
 
     def rm_properties(self, key):
         self._load_auth()
+        self.project_property.load()
+        if self.project_property.config.get(key):
+            self.project_property.__delitem__(key)
+            self.project_property.save()
         project_id = self._get_current_project_id()
         self.api.delete_project_property(project_id, key)
+
+    def read_property_file(self, file):
+        try:
+            return yaml.load(file)
+        except:
+            raise exc.InvalidJsonFormat()
+
+    def show_help(self):
+        self.print_message()
+        self.print_message("Bothub Test Console")
+        self.print_message("-------------------")
+        self.print_message()
+        self.print_message("Commands:")
+        self.print_message()
+        commands = [
+            ("help", "Print help menu"),
+            ("location", "Send user location"),
+            ("updateproperties", "Update local project properties from server"),
+            ("exit", "Exit the test console"),
+        ]
+        max_command_length = max([len(command) for command, _ in commands])
+        template_string = "  /{0}{2}{1}"
+        for command, description in commands:
+            padding_width = (max_command_length - len(command)) + 2 # 2 is extra spaces
+            padding = ' ' * padding_width
+            self.print_message(template_string.format(command, description, padding))
+        self.print_message()
 
     def test(self):
         self._load_auth()
         history = FileHistory('.history')
 
         project_id = self._get_current_project_id()
-        bot = self._load_bot()
-
+        bot_meta = self._load_bot()
+        bot = bot_meta['bot']
+        storage_client = bot_meta['storage_client'] # type: CachedStorageClient
+        self.show_help()
+        storage_client.load_project_data()
         while True:
             try:
                 line = prompt('BotHub> ', history=history)
                 if not line:
                     continue
-                event = make_event(line)
-                context = {}
-                bot.handle_message(event, context)
+                if line.startswith('/help'):
+                    self.show_help()
+                elif line.startswith('/updateproperties'):
+                    storage_client.load_project_data()
+                elif line.startswith('/exit'):
+                    break
+                else:
+                    event = make_event(line)
+                    context = {}
+                    bot.handle_message(event, context)
             except (EOFError, KeyboardInterrupt):
                 break
             except Exception:
                 traceback.print_exc()
+        storage_client.store_project_data()
 
     def add_nlu(self, nlu, credentials):
         self._load_auth()
@@ -269,10 +332,11 @@ class Cli(object):
         context['nlu'] = dict([(nlu['nlu'], nlu['credentials']) for nlu in nlus])
 
         channel_client = ConsoleChannelClient()
-        storage_client = ExternalHttpStorageClient(
+        http_storage_client = ExternalHttpStorageClient(
             self.config.get('auth_token'),
             project_id,
         )
+        storage_client = CachedStorageClient(http_storage_client)
         nlu_client_factory = NluClientFactory(context)
         bot_class = get_bot_class(target_dir)
         bot = bot_class(
@@ -281,4 +345,5 @@ class Cli(object):
             nlu_client_factory=nlu_client_factory,
             event=event
         )
-        return bot
+        return {'bot': bot, 'channel_client': channel_client, 'storage_client': storage_client,
+                'nlu_client_factory': nlu_client_factory}

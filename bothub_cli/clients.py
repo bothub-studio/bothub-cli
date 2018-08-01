@@ -13,10 +13,46 @@ class ConsoleChannelClient(object):
         print('{}{}'.format(_channel, message))
 
 
+class CachedStorageClient(object):
+    def __init__(self, storage_client):
+        self.storage_client = storage_client
+        self.properties = {}
+        self.updated_properties = {}
+
+    def set_project_data(self, data):
+        self.updated_properties.update(data)
+        self.properties.update(data)
+        return self.updated_properties
+
+    def get_project_data(self, key=None):
+        if key is not None:
+            return self.properties.get(key)
+        return self.properties
+
+    def set_user_data(self, channel, user_id, data):
+        return self.storage_client.set_user_data(channel, user_id, data)
+
+    def get_user_data(self, channel, user_id, key=None):
+        return self.storage_client.get_user_data(channel, user_id, key)
+
+    def set_current_user_data(self, data):
+        return self.storage_client.set_current_user_data(data)
+
+    def get_current_user_data(self, key=None):
+        return self.storage_client.get_current_user_data(key=key)
+
+    def load_project_data(self):
+        self.properties = self.storage_client.get_project_data()
+
+    def store_project_data(self):
+        if self.updated_properties:
+            self.storage_client.set_project_data(self.updated_properties)
+        self.updated_properties = {}
+
+
 class ExternalHttpStorageClient(object):
     base_url = os.environ.get('BOTHUB_API_BASE_URL',
                               'https://api.bothub.studio/api')
-
     def __init__(self, access_token, project_id, user=None):
         self.access_token = access_token
         self.project_id = project_id
@@ -37,10 +73,8 @@ class ExternalHttpStorageClient(object):
         )
         return response.json()['data']
 
-    def get_project_data(self, key=None):
+    def get_project_data(self):
         url = '{}/projects/{}/properties'.format(self.base_url, self.project_id)
-        if key:
-            url += '/{}'.format(key)
         headers = self.get_headers()
         response = requests.get(url, headers=headers)
         return response.json()['data']

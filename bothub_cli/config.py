@@ -43,7 +43,7 @@ class ConfigBase(object):
 
     def load(self):
         try:
-            with open(self.path) as fin:
+            with open(self.path, encoding='utf8') as fin:
                 self.config = yaml.load(fin)
         except IOError:
             raise exc.ImproperlyConfigured()
@@ -86,6 +86,15 @@ class Config(ConfigBase):
 class ProjectConfig(ConfigBase):
     def __init__(self, path=('bothub.yml', 'bothub.yaml')):
         super(ProjectConfig, self).__init__(path)
+
+class ProjectProperty(ConfigBase):
+    def __init__(self, path=None):
+        _path = path or os.path.expanduser(os.path.join('.bothub-meta', 'property.yml'))
+        super(ProjectProperty, self).__init__(_path)
+    def load_from_server(self, properties):
+        for key, val in properties.items():
+            self.set( key, val)
+        self.save()
 
 
 class ProjectMeta(ConfigBase):
