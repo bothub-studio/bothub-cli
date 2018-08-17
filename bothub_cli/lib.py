@@ -141,9 +141,17 @@ class Cli(object):
         self._load_auth()
         project_id = self._get_current_project_id()
         self.api.add_project_channel(project_id, channel, credentials)
-        if channel == 'kakao':
-            return "Please input below url to Kakao setting page.\n\n \
-            App URL: https://api.bothub.studio/api/projects/{}/webhooks/kakao\n".format(project_id)
+        if channel == 'kakao' or channel == 'twilio':
+            return "Please input below url to {} setting page.\n\n \
+            URL: {}\n".format(channel.capitalize(), self.api.get_webhook_url(channel, project_id))
+        elif channel == 'slack':
+            result = []
+            result.append('Please input below url to {} setting page\n\n'.format(channel.capitalize()))
+            result.append('\t- Event Subscriptions URL: {}'.format(self.api.get_webhook_url(channel, project_id)))
+            result.append('\t- Interactivity URL: {}/action'.format(self.api.get_webhook_url(channel, project_id)))
+            result.append('\t- Redirect URL: {}/oauth_callback\n'.format(self.api.get_webhook_url(channel, project_id)))
+            return '\n'.join(result)
+
 
     def ls_channel(self, verbose=False):
         self._load_auth()

@@ -103,6 +103,10 @@ class Api(ApiBase):
         response_dict = response.json()['data']
         return response_dict['access_token']
 
+    def get_webhook_url(self, channel, project_id):
+        url = self._gen_url('projects', project_id, 'webhooks', channel)
+        return url
+
     def list_projects(self):
         url = self._gen_url('users', 'self', 'projects')
         headers = self._get_auth_headers()
