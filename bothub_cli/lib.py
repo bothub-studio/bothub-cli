@@ -51,17 +51,22 @@ class Cli(object):
         self.config.set('auth_token', token)
         self.config.save()
 
-    def init(self, name, description):
+    def init(self, name, description, target_dir=None):
+        _target_dir = target_dir or name
+
+        if os.path.isdir(_target_dir) and _target_dir != '.':
+            raise exc.TargetDirectoryDuplicated(_target_dir)
+
         self._load_auth()
         project = self.api.create_project(name, description)
         project_id = project['id']
         programming_language = 'python3'
         self.project_meta.set('id', project_id)
         self.project_meta.set('name', name)
-        self.project_meta.save()
+        self.project_meta.save(_target_dir)
 
         self.project_config.set('programming-language', programming_language)
-        self.project_config.save()
+        self.project_config.save(_target_dir)
 
     def init_code(self):
         project_id = self.project_meta.get('id')
@@ -111,11 +116,12 @@ class Cli(object):
             )
         self._wait_deploy_completion(project_id, console, max_retries=max_retries)
 
-    def clone(self, project_name, target_dir=None):
+    def clone(self, project_name, target_dir=None, create_dir=None):
         _target_dir = target_dir or project_name
 
-        if os.path.isdir(_target_dir) and _target_dir != '.':
-            raise exc.TargetDirectoryDuplicated(_target_dir)
+        if create_dir:
+            if os.path.isdir(_target_dir) and _target_dir != '.':
+                raise exc.TargetDirectoryDuplicated(_target_dir)
 
         self._load_auth()
         project_id = self._get_project_id_with_name(project_name)

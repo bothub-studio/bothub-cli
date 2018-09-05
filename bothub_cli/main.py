@@ -101,16 +101,16 @@ def create_project(create_dir=False):
             normalized_name = name.strip()
             if not normalized_name:
                 continue
+            target_dir = '.'
+            if create_dir:
+                target_dir = normalized_name
             click.secho('Creating project...', fg='green')
-            lib_cli.init(normalized_name, '')
+            lib_cli.init(normalized_name, '', target_dir=target_dir)
 
             if not project_config_exists:
                 click.secho('Initialize project template.')
                 lib_cli.init_code()
                 click.secho('Download project template.')
-                target_dir = '.'
-                if create_dir:
-                    target_dir = normalized_name
                 lib_cli.clone(normalized_name, target_dir=target_dir)
                 click.echo('')
             else:
@@ -159,7 +159,7 @@ def clone(project_name):
 
     try:
         lib_cli = lib.Cli()
-        lib_cli.clone(project_name)
+        lib_cli.clone(project_name, create_dir=True)
         click.secho('Project {} is cloned.'.format(project_name), fg='green')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
