@@ -20,11 +20,14 @@ from bothub_cli import exceptions as exc
 def print_error(msg):
     click.secho(msg, fg='red')
 
+
 def print_success(msg):
     click.secho(msg, fg='green')
 
+
 def print_message(msg=''):
     click.echo(msg)
+
 
 def print_introduction(start_line=0):
     commands = [
@@ -39,6 +42,7 @@ def print_introduction(start_line=0):
     for index, (command, description) in enumerate(commands[start_line:], 1):
         click.secho('Step {}: {}'.format(index, command), fg='green')
         click.secho(' ' * 2 + description)
+
 
 @click.group(invoke_without_command=True)
 @click.option('-V', '--version', is_flag=True, default=False)
@@ -61,12 +65,14 @@ def cli(ctx, version):
     if ctx.invoked_subcommand is None:
         print(ctx.get_help())
 
+
 @cli.command()
 def introduction():
     '''
     Introduction Guide
     '''
     print_introduction()
+
 
 @cli.command()
 def configure():
@@ -315,21 +321,6 @@ def ls_property():
     try:
         lib_cli = lib.Cli()
         properties = lib_cli.ls_properties()
-        properties_list = [(k, v) for k, v in properties.items()]
-        header = ['Name', 'Value']
-        data = [header] + properties_list
-        table = Table(data)
-        click.secho(table.table)
-    except exc.CliException as ex:
-        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
-
-
-@property.command(name='reload')
-def reload_property():
-    '''Reload property list from server'''
-    try:
-        lib_cli = lib.Cli()
-        properties = lib_cli.reload_properties()
         properties_list = [(k, v) for k, v in properties.items()]
         header = ['Name', 'Value']
         data = [header] + properties_list
