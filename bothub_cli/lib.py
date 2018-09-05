@@ -208,7 +208,6 @@ class Cli(object):
         self.print_message()
         commands = [
             ("help", "Print help menu"),
-            ("location", "Send user location"),
             ("updateproperties", "Update local project properties from server"),
             ("exit", "Exit the test console"),
         ]
