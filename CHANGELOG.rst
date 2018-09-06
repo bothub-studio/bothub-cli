@@ -1,3 +1,12 @@
+0.1.18
+------
+
+* add Slack and KaKao channel
+* add a ``new`` command
+* update console messages
+* fix: decode error when opening yml file
+
+
 0.1.17
 ------
 
