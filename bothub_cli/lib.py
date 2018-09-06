@@ -249,7 +249,6 @@ class Cli(object):
                 break
             except Exception:
                 traceback.print_exc()
-        storage_client.store_project_data()
 
     def add_nlu(self, nlu, credentials):
         self._load_auth()
