@@ -33,10 +33,10 @@ def print_introduction(start_line=0):
     commands = [
         ('bothub configure', '-- Configure an account credential'),
         ('bothub new', '-- Create an blank project'),
-        ('bothub test', '-- Enter to the newly created project directory and run `bothub test`'),
+        ('bothub test', '-- Get into the newly created project directory and run `bothub test`'),
         ('bothub deploy', '-- Write your code in `bot.py` and run `bothub deploy` to deploy it'),
     ]
-    click.secho('What can you do next?', fg='green')
+    click.secho('What you can do next:', fg='green')
     click.secho('')
 
     for index, (command, description) in enumerate(commands[start_line:], 1):
@@ -78,7 +78,7 @@ def introduction():
 def configure():
     '''Setup credentials'''
     try:
-        click.echo('Please enter your BotHut.Studio login credentials:')
+        click.echo('Please enter your BotHub.Studio login credentials:')
         username = click.prompt('username')
         password = click.prompt('password', hide_input=True)
         click.secho('Connecting to server...', fg='green')
