@@ -235,12 +235,15 @@ def ask_channel_keys(param_list):
 @click.option('--client-id', help='Slack client id', default='')
 @click.option('--client-secret', help='Slack client secret', default='')
 @click.option('--signing-secret', help='Slack signing secret', default='')
-def add_channel(channel, api_key, app_id, app_secret, page_access_token, client_id, client_secret, signing_secret):
+@click.option('--channel-id', help='Line channel id', default='')
+@click.option('--channel-secret', help='Line channel secret', default='')
+@click.option('--channel-access-token', help='Line channel access token', default='')
+def add_channel(channel, api_key, app_id, app_secret, page_access_token, client_id, client_secret, signing_secret, channel_id, channel_secret, channel_access_token):
     '''Add a new channel to current project'''
     try:
         credentials = {}
-        if not channel in ['telegram', 'facebook', 'slack', 'kakao', 'twilio']:
-            channel = click.prompt('Choose a channel to add: [facebook, telegram, slack, kakao]', type=click.Choice(['facebook', 'telegram', 'slack', 'kakao']))
+        if not channel in ['telegram', 'facebook', 'slack', 'kakao', 'twilio', 'line']:
+            channel = click.prompt('Choose a channel to add: [facebook, telegram, slack, kakao, line]', type=click.Choice(['facebook', 'telegram', 'slack', 'kakao', 'line']))
 
         channel_list = {
             'telegram': [
@@ -259,6 +262,11 @@ def add_channel(channel, api_key, app_id, app_secret, page_access_token, client_
             'kakao':[
             ],
             'twilio':[
+            ],
+            'line': [
+                {'name': 'channel_id', 'value': channel_id, 'prompt': 'Please enter{} Line {}', 'rule': r'.+'},
+                {'name': 'channel_secret', 'value': channel_secret, 'prompt': 'Please enter{} Line {}', 'rule': r'.+'},
+                {'name': 'channel_access_token', 'value': channel_access_token, 'prompt': 'Please enter{} Line {}', 'rule': r'^.+'},
             ]
         }
 
@@ -267,7 +275,7 @@ def add_channel(channel, api_key, app_id, app_secret, page_access_token, client_
         result = lib_cli.add_channel(channel, credentials)
         click.secho('Added a channel {}'.format(channel))
 
-        if channel == 'kakao' or channel == 'slack':
+        if channel == 'kakao' or channel == 'slack' or channel == 'line':
             print_success(result)
 
     except exc.CliException as ex:
