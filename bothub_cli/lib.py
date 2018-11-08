@@ -151,6 +151,11 @@ class Cli(object):
         if channel == 'kakao' or channel == 'twilio':
             return "Please input below url to {} setting page.\n\n \
             URL: {}\n".format(channel.capitalize(), self.api.get_webhook_url(channel, project_id))
+        elif channel == 'line':
+            result = []
+            result.append('Please input below url to {} setting page\n\n'.format(channel.capitalize()))
+            result.append('\t- Webhook URL: {}\n'.format(self.api.get_webhook_url(channel, project_id)))
+            return '\n'.join(result)
         elif channel == 'slack':
             result = []
             result.append('Please input below url to {} setting page\n\n'.format(channel.capitalize()))
