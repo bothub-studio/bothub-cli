@@ -101,7 +101,12 @@ class Cli(object):
         dist_file_path = os.path.join('dist', 'bot.tgz')
         if console:
             console('Make dist package.')
-        make_dist_package(dist_file_path, source_dir)
+        if os.path.isfile('.ignore'):
+            with open('.ignore', 'r', encoding='utf8') as ignore_file:
+                ignores = ignore_file.read().split()
+                make_dist_package(dist_file_path, source_dir, ignores=tuple(ignores))
+        else:
+            make_dist_package(dist_file_path, source_dir)
 
         if console:
             console('Upload code', nl=False)
