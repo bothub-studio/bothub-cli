@@ -60,13 +60,13 @@ entity_yaml = {
     "name": "default",
     "data": [
       {
-        "value": "동그라미",
+        "value": "fruit",
         "synonyms": [
-          "동그라미",
-          "원",
-          "동글이",
-          "동글배기",
-          "둥근"
+          "apple",
+          "banana",
+          "melon",
+          "strawberry",
+          "blueberry"
         ]
       }
     ]

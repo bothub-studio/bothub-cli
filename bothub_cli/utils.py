@@ -11,13 +11,10 @@ from datetime import timedelta
 import yaml
 import requests
 import tarfile
-
-#########
-from ruamel.yaml import YAML
 import json
 import shutil
 from bothub_cli import template
-##########
+from ruamel.yaml import YAML
 
 from bothub_cli import __version__
 from bothub_client import __version__ as sdk_version
@@ -236,9 +233,6 @@ def get_bot_class(target_dir='.'):
         else:
             raise exc.ModuleLoadException()
 
-########
-##Agent.zip 파일 구조가 달라지면 메뉴얼하게 수정해야 함
-##현재 agent.json, /entities, /intents, package.json
 
 def make_intents_json(agent_folder, display_name, target_dic, lang):
     intents_path = os.path.join(agent_folder, "intents")
@@ -324,17 +318,14 @@ def make_entities_yml(agent_folder, lang):
         for f in os.listdir(path):
             if "entries" in f:
                 continue
-
             entity_name = f.replace(".json", "")
             pair_file = f.replace(".json", "_entries_" + lang + ".json")
 
-            ##Extract ENTITY_NAME.json
             file_path1 = os.path.join(path, f)
             with open(file_path1) as json_file1:
                 json_obj = json.load(json_file1)
                 filtered_obj = filtering_info(json_obj, template.entity_info)
 
-            ##Extract ENTITY_NAME_entries.json
             file_path2 = os.path.join(path, pair_file)
             with open(file_path2) as json_file2:
                 json_obj = json.load(json_file2)
@@ -373,32 +364,28 @@ def filter_intent_usersays(file_path):
     with open(file_path) as json_file:
         target_json = json.load(json_file)
 
-    tp_dict = {"training_phrases":[]}
+    result_dict = {"training_phrases":[]}
     for item in target_json:
         filtered_info = filtering_info(item, template.intent_usersays)
         full_text = ""
         phrase = {}
         phrase_part = []
 
-        ##proprocessing
         for data in filtered_info["data"]:
             text = data["text"]
             full_text += text
-
             try:
                 meta = data["meta"]
                 phrase_part.append({text:meta})
             except:
                 phrase_part.append(text)
                 continue
-        
         if len(phrase_part) == 1:
             phrase = full_text
         else:
             phrase = {full_text:phrase_part}
-        tp_dict["training_phrases"].append(phrase)
-    
-    return tp_dict
+        result_dict["training_phrases"].append(phrase)
+    return result_dict
 
 
 def filter_intent_info(file_path):
@@ -406,7 +393,6 @@ def filter_intent_info(file_path):
     with open(file_path) as json_file:
         target_json = json.load(json_file)
     result = filtering_info(target_json, template.intent_info)
-
     return result
 
         
@@ -432,8 +418,6 @@ def filtering_info(target_json_obj, default_json_obj):
                 continue
             elif isinstance(value[0], dict):
                 result_list = []
-                ## Extract default item
-                ## Ex) Response format is one, it is possible to be many response.
                 if len(default_value) == 0:
                     default_item = {}
                 else:
@@ -443,7 +427,6 @@ def filtering_info(target_json_obj, default_json_obj):
                     if not value  and not isinstance(value, bool):
                         continue
                     result_list.append(value)
-                ## If result_list length is 0, we dont need this
                 if len(result_list) is 0:
                     continue
                 value = result_list
@@ -462,15 +445,12 @@ def joining_info_func(default_obj, target_obj):
                     value = target_obj[key]
             elif isinstance(value, list):
                 if len(value) == 0:
-                    ## Case default is [], target is []
                     if len(target_obj[key]) == 0:
                         join_obj[key] = value
                         continue
                     else:
-                    ## Case default is [], target is [..]
                         value = target_obj[key]        
                 else:
-                ## Case default is [..], target is [..]
                     obj_list = []
                     for obj in target_obj[key]:
                         obj_list.append(joining_info_func(value[0], obj))
@@ -478,7 +458,6 @@ def joining_info_func(default_obj, target_obj):
             elif isinstance(value, dict):
                 value = joining_info_func(value, target_obj[key])
         join_obj[key] = value
-
     return join_obj
 
 
@@ -487,7 +466,6 @@ def joining_usersays_func(usersays_dic):
     for usersay in usersays_dic["training_phrases"]:
         data_list = []
         if isinstance(usersay, dict):
-            ## usersay ==> {'Full text': ['Part text', {'Part text': 'Entity'}]}
             part = list(usersay.values())[0]
             for item in part:
                 data = {}
@@ -497,7 +475,6 @@ def joining_usersays_func(usersays_dic):
                         "userDefined" : False
                     }
                 elif isinstance(item, dict):
-                    ## text_info format is {text:entity}
                     text_info = list(item.items())[0]
                     text = text_info[0]
                     entity = text_info[1]
@@ -519,4 +496,3 @@ def joining_usersays_func(usersays_dic):
         usersays_list.append(usersays)
 
     return usersays_list
-###########

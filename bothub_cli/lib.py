@@ -8,13 +8,10 @@ import json
 import time
 import traceback
 import yaml
-
-####
 import zipfile, shutil
 import dialogflow
 import io
 import google.api_core.exceptions as g_exc
-####
 
 from prompt_toolkit import prompt
 from prompt_toolkit import PromptSession
@@ -37,15 +34,13 @@ from bothub_cli.utils import extract_dist_package
 from bothub_cli.utils import make_event
 from bothub_cli.utils import tabulate_dict
 from bothub_cli.utils import get_bot_class
-
-####
 from bothub_cli.utils import make_intents_json
 from bothub_cli.utils import make_intents_yml
 from bothub_cli.utils import make_entities_json
 from bothub_cli.utils import make_entities_yml
 from bothub_cli.utils import make_etc_json
 from bothub_cli.utils import make_etc_yml
-####
+
 
 class Cli(object):
     '''A CLI class represents '''
@@ -363,8 +358,7 @@ class Cli(object):
         return {'bot': bot, 'channel_client': channel_client, 'storage_client': storage_client,
                 'nlu_client_factory': nlu_client_factory}
     
-    #######
-    ####### add by dongho
+
     def get_credential(self, nlu):
         self._load_auth()
         project_id = self._get_current_project_id()
@@ -432,31 +426,23 @@ class Cli(object):
             shutil.rmtree(agent_folder)
         os.mkdir(agent_folder)
 
-        ##예외처리 체크
         response = client.export_agent(parent).operation.response.value
-
         zip_file = zipfile.ZipFile(io.BytesIO(response), "r")
         for filename in zip_file.namelist():
             split_name = filename.split('/')
             for name in split_name[:-1]:
                 if not os.path.exists(os.path.join(agent_folder, name)):
                     os.mkdir(os.path.join(agent_folder, name))
-            try:
-                with open(os.path.join(agent_folder, filename), "wb") as f:
-                    f.write(zip_file.read(filename))
-            except Exception as e:
-                print(e)
-
+            with open(os.path.join(agent_folder, filename), "wb") as f:
+                f.write(zip_file.read(filename))
 
     def _yml2json(self, agent_name):
         agent_folder = os.path.join("./dialogflow", agent_name)
         lang = self._get_dialogflow_lang()
 
-        ## Remove existing files and make new files
         package_path = os.path.join(agent_folder, "package.json")
         if os.path.exists(package_path):
             os.remove(package_path)
-
         agent_path = os.path.join(agent_folder, "agent.json")
         if os.path.exists(agent_path):
             os.remove(agent_path)
@@ -467,11 +453,9 @@ class Cli(object):
 
         with open(os.path.join(agent_folder, "intents.yml"), "r") as stream:
             intents_docs = yaml.load_all(stream) 
-            ## 예외 처리 및 로그 처리
             for doc in intents_docs:
                 for key, value in doc.items():
-                    make_intents_json(agent_folder, key, value, lang)
-        
+                    make_intents_json(agent_folder, key, value, lang)     
         if os.path.exists(os.path.join(agent_folder, "entities")):
             shutil.rmtree(os.path.join(agent_folder, "entities"))
         os.mkdir(os.path.join(agent_folder, "entities"))
@@ -480,9 +464,7 @@ class Cli(object):
             for doc in entities_docs:
                 for key, value in doc.items():
                     make_entities_json(agent_folder, key, value, lang)
-
         make_etc_json(agent_folder)
-
 
     def _json2yml(self, agent_name):
         agent_folder = os.path.join("./dialogflow", agent_name)

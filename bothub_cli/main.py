@@ -523,6 +523,7 @@ def push_agent():
         lib_cli.push_agent()
         credential = lib_cli.get_credential("dialogflow")
         click.secho('Pushed agent to: {}'.format(credential['agent_id']))
+        click.secho('Deploy your bothub project if you want to sync Dialogflow  {}'.format(nlu))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
