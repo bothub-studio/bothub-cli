@@ -148,10 +148,7 @@ def timestamp(dt=None):
     return int(time.mktime(dt.timetuple()))
 
 
-def check_ignore_pattern(name, soft_ignore_patterns=None):
-    if name in soft_ignore_patterns:
-        raise exc.IgnorePatternMatched()
-
+def check_ignore_pattern(name):
     for pattern in PACKAGE_IGNORE_PATTERN:
         if pattern.match(name):
             raise exc.IgnorePatternMatched()
