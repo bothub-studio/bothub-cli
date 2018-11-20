@@ -5,6 +5,7 @@ import os
 import json
 import click
 import re
+
 from terminaltables import AsciiTable as Table
 try:
     from json import JSONDecodeError
@@ -214,6 +215,8 @@ def ask_channel_keys(param_list):
         title = param['name'].replace('_', ' ').title()
         valid_msg = ''
         while True:
+            print(param['value'])
+            print("11")
             matches = re.match(param['rule'], param['value'])
             if matches:
                 credentials[param['name']] = matches.group()
@@ -420,16 +423,51 @@ def ls_nlu(long=False):
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 
+def ask_nlu_keys(param_list):
+    credentials = {}
+    for param in param_list:
+        title = param['name'].replace('_', ' ').title()
+        valid_msg = ''
+        while True:
+            matches = re.match(param['rule'], param['value'])
+            if matches:
+                credentials[param['name']] = matches.group()
+                print_success('{} is saved'.format(title))
+                break
+            elif param['value']:
+                valid_msg = ' a valid'
+                print_error("{} is invalid".format(title))
+            param['value'] = click.prompt(param['prompt'].format(valid_msg, title))
+    return credentials
+
+
 @nlu.command(name='add')
 @click.argument('nlu')
-@click.option('--api-key')
-def add_nlu(nlu, api_key):
+@click.option('--api-key', help='API.ai api key', default='')
+@click.option('--agent-id', help='Dialogflow agent id', default='')
+def add_nlu(nlu, api_key, agent_id):
     '''Add a NLU integration'''
     try:
         lib_cli = lib.Cli()
         credentials = {}
-        add_option_to_dict(credentials, 'api_key', api_key)
-        lib_cli.add_nlu(nlu, credentials)
+        if not nlu in ['apiai', 'dialogflow']:
+            nlu = click.prompt('Choose a nlu to add: [apiai, dialogflow]', type=click.Choice(['dialogflow']))
+
+        nlu_list = {
+            'apiai':[
+                {'name': 'api_key', 'value': api_key, 'prompt': 'Please enter{} Api AI {}', 'rule':r'.+'},
+            ],
+            'dialogflow':[
+                {'name': 'agent_id', 'value': agent_id, 'prompt': 'Please enter{} Dialogflow {}', 'rule':r'.+'},
+            ],
+        }
+        credentials = ask_nlu_keys(nlu_list[nlu])
+        if nlu == 'dialogflow':
+            if not os.path.exists("./dialogflow"):
+                os.mkdir("./dialogflow")
+            if lib_cli.isValidAgentId(credentials['agent_id']):
+                lib_cli.add_nlu(nlu, credentials)
+                lib_cli.pull_agent()
         click.secho('Added a NLU: {}'.format(nlu))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
@@ -473,6 +511,31 @@ def logs():
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
+@cli.group()
+def dialogflow():
+    '''Manage Dialogflow agent'''
+    pass
+
+@dialogflow.command(name='push')
+def push_agent():
+    try:
+        lib_cli = lib.Cli()
+        lib_cli.push_agent()
+        credential = lib_cli.get_credential("dialogflow")
+        click.secho('Pushed agent to: {}'.format(credential['agent_id']))
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
+
+
+@dialogflow.command(name='pull')
+def pull_agent():
+    try:
+        lib_cli = lib.Cli()
+        lib_cli.pull_agent()
+        credential = lib_cli.get_credential("dialogflow")
+        click.secho('Pulled agent to: {}'.format(credential['agent_id']))
+    except exc.CliException as ex:
+        click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
 def main():
     cli()

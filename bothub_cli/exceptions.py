@@ -38,6 +38,11 @@ class AuthenticationFailed(InvalidCredential):
         msg = 'Invalid username or password.'
         super(AuthenticationFailed, self).__init__(msg)
 
+class AgentIdNotFound(InvalidCredential):
+    def __init__(self, agent_id):
+        msg = "No such agent id: {}.".format(agent_id)
+        super(AgentIdNotFound, self).__init__(msg)
+
 
 class NoCredential(CliException):
     pass
