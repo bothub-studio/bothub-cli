@@ -38,6 +38,7 @@ setup(
         'terminaltables',
         'prompt-toolkit>=2.0',
         'bothub>=0.1.18',
+        'pathspec',
     ],
     setup_requires=[
         'pytest-runner',

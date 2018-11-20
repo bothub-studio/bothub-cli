@@ -11,6 +11,7 @@ from datetime import timedelta
 import yaml
 import requests
 import tarfile
+import pathspec
 
 from bothub_cli import __version__
 from bothub_client import __version__ as sdk_version
@@ -156,23 +157,34 @@ def check_ignore_pattern(name, soft_ignore_patterns=None):
             raise exc.IgnorePatternMatched()
 
 
-def make_dist_package(dist_file_path, source_dir='.', ignores=tuple()):
+def make_dist_package(dist_file_path, source_dir='.', ignores=None):
     '''Make dist package file of current project directory.
     Includes all files of current dir, bothub dir and tests dir.
     Dist file is compressed with tar+gzip.'''
     if os.path.isfile(dist_file_path):
         os.remove(dist_file_path)
 
-    with tarfile.open(dist_file_path, 'w:gz') as tout:
-        for fname in os.listdir(source_dir):
-            try:
-                check_ignore_pattern(fname, soft_ignore_patterns=ignores)
-                if os.path.isfile(fname):
-                    tout.add(fname)
-                elif os.path.isdir(fname):
-                    tout.add(fname)
-            except exc.IgnorePatternMatched:
-                pass
+    if ignores:
+        with open('.bothubignore', 'r') as fh:
+            spec = pathspec.PathSpec.from_lines('gitignore', fh)
+            
+        with tarfile.open(dist_file_path, 'w:gz') as tout:
+            for dirname, dirnames, filenames in os.walk(source_dir):
+                for filename in filenames:
+                    file = os.path.join(dirname, filename)
+                    if not spec.match_file(file):
+                        tout.add(file)
+    else:
+        with tarfile.open(dist_file_path, 'w:gz') as tout:
+            for fname in os.listdir(source_dir):
+                try:
+                    check_ignore_pattern(fname)
+                    if os.path.isfile(fname):
+                        tout.add(fname)
+                    elif os.path.isdir(fname):
+                        tout.add(fname)
+                except exc.IgnorePatternMatched:
+                    pass
 
 
 def extract_dist_package(dist_file_path, target_dir=None):
