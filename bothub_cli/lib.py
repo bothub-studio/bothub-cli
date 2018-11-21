@@ -11,7 +11,8 @@ import yaml
 import zipfile, shutil
 import dialogflow
 import io
-import google.api_core.exceptions as g_exc
+import google.auth.exceptions
+import google.api_core.exceptions
 
 from prompt_toolkit import prompt
 from prompt_toolkit import PromptSession
@@ -364,7 +365,7 @@ class Cli(object):
         nlu = self.api.get_project_nlu(project_id, nlu)
         return nlu['credentials']
 
-    def push_agent(self, agent_id=None):
+    def push_agent(self):
         agent_id = self.get_credential('dialogflow')['agent_id']
         client = dialogflow.AgentsClient()
         parent = client.project_path(agent_id)
@@ -372,34 +373,43 @@ class Cli(object):
         agent_name = response.display_name
         agent_folder = os.path.join("./dialogflow", agent_name)
 
-        self._yml2json(agent_name)
-        with zipfile.ZipFile(agent_folder + '.zip', 'w') as myzip:
-            for folder, subfolders, files in os.walk(agent_folder):
-                for f in subfolders + files:
-                    if not f.endswith(".yml"):
-                        absname = os.path.join(folder, f)
-                        arcname = absname.replace("/dialogflow", "")
-                        myzip.write(absname, arcname)
-        self._upload_agent(agent_name, agent_id)
+        try:
+            self._yml2json(agent_name, agent_id)
+            with zipfile.ZipFile(agent_folder + '.zip', 'w') as myzip:
+                for folder, subfolders, files in os.walk(agent_folder):
+                    for f in subfolders + files:
+                        if not f.endswith(".yml"):
+                            absname = os.path.join(folder, f)
+                            arcname = absname.replace("/dialogflow", "")
+                            myzip.write(absname, arcname)
+            self._upload_agent(agent_name, agent_id)
+        except google.api_core.exceptions.InvalidArgument:
+            raise exc.InvalidYamlFormat()
+        except TypeError:
+            raise exc.InvalidYamlFormat()
 
     def pull_agent(self, agent_id=None):
-        if not agent_id:
-            agent_id = self.get_credential('dialogflow')['agent_id']
-        client = dialogflow.AgentsClient()
-        parent = client.project_path(agent_id)
-        response = client.get_agent(parent)
-        agent_name = response.display_name
-        self._download_agent(agent_name, agent_id)
-        self._json2yml(agent_name, agent_id)
-
-    def isValidAgentId(self, agent_id):
         try:
+            if not agent_id:
+                agent_id = self.get_credential('dialogflow')['agent_id']
             client = dialogflow.AgentsClient()
             parent = client.project_path(agent_id)
             response = client.get_agent(parent)
-        except g_exc.PermissionDenied:
-            return False
-        return True
+            agent_name = response.display_name
+            if not os.path.exists("./dialogflow"):
+                os.mkdir("./dialogflow")
+                
+            self._download_agent(agent_name, agent_id)
+            self._json2yml(agent_name, agent_id)
+        except google.api_core.exceptions.PermissionDenied:
+            raise exc.InvalidAgentId(agent_id)
+        except google.auth.exceptions.DefaultCredentialsError:
+            raise exc.InvalidCredentialPath()
+
+    def isValidAgentId(self, agent_id):
+        client = dialogflow.AgentsClient()
+        parent = client.project_path(agent_id)
+        response = client.get_agent(parent)
 
     def _upload_agent(self, agent_name, agent_id):
         client = dialogflow.AgentsClient()
@@ -412,9 +422,6 @@ class Cli(object):
     def _download_agent(self, agent_name, agent_id):
         client = dialogflow.AgentsClient()
         parent = client.project_path(agent_id)
-        if agent_name is None:
-            response = client.get_agent(parent)
-            agent_name = response.display_name
 
         agent_folder = os.path.join("./dialogflow", agent_name)
         if os.path.exists(agent_folder):
@@ -431,9 +438,9 @@ class Cli(object):
             with open(os.path.join(agent_folder, filename), "wb") as f:
                 f.write(zip_file.read(filename))
 
-    def _yml2json(self, agent_name):
+    def _yml2json(self, agent_name, agent_id):
         agent_folder = os.path.join("./dialogflow", agent_name)
-        lang = self._get_dialogflow_lang()
+        lang = self._get_dialogflow_lang(agent_id)
 
         package_path = os.path.join(agent_folder, "package.json")
         if os.path.exists(package_path):
@@ -445,7 +452,7 @@ class Cli(object):
         if os.path.exists(os.path.join(agent_folder, "intents")):
             shutil.rmtree(os.path.join(agent_folder, "intents"))
         os.mkdir(os.path.join(agent_folder, "intents"))
-
+        
         with open(os.path.join(agent_folder, "intents.yml"), "r") as stream:
             intents_docs = yaml.load_all(stream) 
             for doc in intents_docs:
@@ -469,9 +476,7 @@ class Cli(object):
         make_entities_yml(agent_folder, lang)
         make_etc_yml(agent_folder)
 
-    def _get_dialogflow_lang(self, agent_id=None):
-        if agent_id is None:
-            agent_id = self.get_credential('dialogflow')['agent_id']
+    def _get_dialogflow_lang(self, agent_id):
         client = dialogflow.AgentsClient()
         parent = client.project_path(agent_id)
         response = client.get_agent(parent)

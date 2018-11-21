@@ -5,7 +5,6 @@ import os
 import json
 import click
 import re
-import google.auth.exceptions
 
 from terminaltables import AsciiTable as Table
 try:
@@ -461,16 +460,9 @@ def add_nlu(nlu, api_key, agent_id):
         }
         credentials = ask_nlu_keys(nlu_list[nlu])
         if nlu == 'dialogflow':
-            if not lib_cli.isValidAgentId(credentials['agent_id']):
-                raise exc.AgentIdNotFound(credentials['agent_id'])
-            if not os.path.exists("./dialogflow"):
-                os.mkdir("./dialogflow")
             lib_cli.pull_agent(credentials['agent_id'])
         lib_cli.add_nlu(nlu, credentials)
         click.secho('Added a NLU: {}'.format(nlu))
-    except google.auth.exceptions.DefaultCredentialsError as ex:
-        msg = "No credentials Path"
-        click.secho('{}: {}'.format(ex.__class__.__name__, msg), fg='red')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -513,13 +505,16 @@ def logs():
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
+
 @cli.group()
 def dialogflow():
     '''Manage Dialogflow agent'''
     pass
 
+
 @dialogflow.command(name='push')
 def push_agent():
+    '''Push agent from local to Dialogflow Server'''
     try:
         lib_cli = lib.Cli()
         lib_cli.push_agent()
@@ -531,6 +526,7 @@ def push_agent():
 
 @dialogflow.command(name='pull')
 def pull_agent():
+    '''Pull agent from Dialogflow Server to local'''
     try:
         lib_cli = lib.Cli()
         lib_cli.pull_agent()

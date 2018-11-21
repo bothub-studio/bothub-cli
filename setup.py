@@ -39,7 +39,6 @@ setup(
         'prompt-toolkit>=2.0',
         'bothub>=0.1.18',
         'dialogflow',
-        'google-auth',
         'ruamel.yaml',
     ],
     setup_requires=[
