@@ -357,14 +357,13 @@ class Cli(object):
         )
         return {'bot': bot, 'channel_client': channel_client, 'storage_client': storage_client,
                 'nlu_client_factory': nlu_client_factory}
-    
 
     def get_credential(self, nlu):
         self._load_auth()
         project_id = self._get_current_project_id()
         nlu = self.api.get_project_nlu(project_id, nlu)
         return nlu['credentials']
-            
+
     def push_agent(self, agent_id=None):
         agent_id = self.get_credential('dialogflow')['agent_id']
         client = dialogflow.AgentsClient()
@@ -382,7 +381,7 @@ class Cli(object):
                         arcname = absname.replace("/dialogflow", "")
                         myzip.write(absname, arcname)
         self._upload_agent(agent_name, agent_id)
-        
+
     def pull_agent(self, agent_id=None):
         if not agent_id:
             agent_id = self.get_credential('dialogflow')['agent_id']
@@ -402,7 +401,7 @@ class Cli(object):
         except g_exc.PermissionDenied:
             return False
         return True
-    
+
     def _upload_agent(self, agent_name, agent_id):
         client = dialogflow.AgentsClient()
         parent = client.project_path(agent_id)
