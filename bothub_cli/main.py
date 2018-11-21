@@ -5,6 +5,7 @@ import os
 import json
 import click
 import re
+import google.auth.exceptions
 
 from terminaltables import AsciiTable as Table
 try:
@@ -215,8 +216,6 @@ def ask_channel_keys(param_list):
         title = param['name'].replace('_', ' ').title()
         valid_msg = ''
         while True:
-            print(param['value'])
-            print("11")
             matches = re.match(param['rule'], param['value'])
             if matches:
                 credentials[param['name']] = matches.group()
@@ -442,7 +441,7 @@ def ask_nlu_keys(param_list):
 
 
 @nlu.command(name='add')
-@click.argument('nlu')
+@click.argument('nlu', default='')
 @click.option('--api-key', help='API.ai api key', default='')
 @click.option('--agent-id', help='Dialogflow agent id', default='')
 def add_nlu(nlu, api_key, agent_id):
@@ -451,8 +450,7 @@ def add_nlu(nlu, api_key, agent_id):
         lib_cli = lib.Cli()
         credentials = {}
         if not nlu in ['apiai', 'dialogflow']:
-            nlu = click.prompt('Choose a nlu to add: [apiai, dialogflow]', type=click.Choice(['dialogflow']))
-
+            nlu = click.prompt('Choose a nlu to add: [apiai, dialogflow]', type=click.Choice(['apiai', 'dialogflow']))
         nlu_list = {
             'apiai':[
                 {'name': 'api_key', 'value': api_key, 'prompt': 'Please enter{} Api AI {}', 'rule':r'.+'},
@@ -463,12 +461,16 @@ def add_nlu(nlu, api_key, agent_id):
         }
         credentials = ask_nlu_keys(nlu_list[nlu])
         if nlu == 'dialogflow':
+            if not lib_cli.isValidAgentId(credentials['agent_id']):
+                raise exc.AgentIdNotFound(credentials['agent_id'])
             if not os.path.exists("./dialogflow"):
                 os.mkdir("./dialogflow")
-            if lib_cli.isValidAgentId(credentials['agent_id']):
-                lib_cli.add_nlu(nlu, credentials)
-                lib_cli.pull_agent()
+            lib_cli.pull_agent(credentials['agent_id'])
+        lib_cli.add_nlu(nlu, credentials)
         click.secho('Added a NLU: {}'.format(nlu))
+    except google.auth.exceptions.DefaultCredentialsError as ex:
+        msg = "No credentials Path"
+        click.secho('{}: {}'.format(ex.__class__.__name__, msg), fg='red')
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 
@@ -523,7 +525,6 @@ def push_agent():
         lib_cli.push_agent()
         credential = lib_cli.get_credential("dialogflow")
         click.secho('Pushed agent to: {}'.format(credential['agent_id']))
-        click.secho('Deploy your bothub project if you want to sync Dialogflow  {}'.format(nlu))
     except exc.CliException as ex:
         click.secho('{}: {}'.format(ex.__class__.__name__, ex), fg='red')
 

@@ -13,12 +13,12 @@ import requests
 import tarfile
 import json
 import shutil
-from bothub_cli import template
 from ruamel.yaml import YAML
 
 from bothub_cli import __version__
 from bothub_client import __version__ as sdk_version
 from bothub_cli import exceptions as exc
+from bothub_cli import template
 
 PYPI_VERSION_PATTERN = re.compile(r'bothub_cli-(.+?)-py2.py3-none-any.whl')
 PYPI_VERSION_PATTERN_SDK = re.compile(r'bothub-(.+?)-py2.py3-none-any.whl')

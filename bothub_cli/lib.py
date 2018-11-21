@@ -390,9 +390,8 @@ class Cli(object):
         parent = client.project_path(agent_id)
         response = client.get_agent(parent)
         agent_name = response.display_name
-
         self._download_agent(agent_name, agent_id)
-        self._json2yml(agent_name)
+        self._json2yml(agent_name, agent_id)
 
     def isValidAgentId(self, agent_id):
         try:
@@ -406,9 +405,6 @@ class Cli(object):
     def _upload_agent(self, agent_name, agent_id):
         client = dialogflow.AgentsClient()
         parent = client.project_path(agent_id)
-        if agent_name is None:
-            response = client.get_agent(parent)
-            agent_name = response.display_name
         
         in_file = open(os.path.join("./dialogflow", agent_name + ".zip"), "rb")
         data = in_file.read()
@@ -466,16 +462,17 @@ class Cli(object):
                     make_entities_json(agent_folder, key, value, lang)
         make_etc_json(agent_folder)
 
-    def _json2yml(self, agent_name):
+    def _json2yml(self, agent_name, agent_id):
         agent_folder = os.path.join("./dialogflow", agent_name)
-        lang = self._get_dialogflow_lang()
+        lang = self._get_dialogflow_lang(agent_id)
 
         make_intents_yml(agent_folder, lang)            
         make_entities_yml(agent_folder, lang)
         make_etc_yml(agent_folder)
 
-    def _get_dialogflow_lang(self):
-        agent_id = self.get_credential('dialogflow')['agent_id']
+    def _get_dialogflow_lang(self, agent_id=None):
+        if agent_id is None:
+            agent_id = self.get_credential('dialogflow')['agent_id']
         client = dialogflow.AgentsClient()
         parent = client.project_path(agent_id)
         response = client.get_agent(parent)
