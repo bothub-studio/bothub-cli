@@ -8,6 +8,11 @@ import json
 import time
 import traceback
 import yaml
+import zipfile, shutil
+import dialogflow
+import io
+import google.auth.exceptions
+import google.api_core.exceptions
 
 from prompt_toolkit import prompt
 from prompt_toolkit import PromptSession
@@ -30,6 +35,12 @@ from bothub_cli.utils import extract_dist_package
 from bothub_cli.utils import make_event
 from bothub_cli.utils import tabulate_dict
 from bothub_cli.utils import get_bot_class
+from bothub_cli.utils import make_intents_json
+from bothub_cli.utils import make_intents_yml
+from bothub_cli.utils import make_entities_json
+from bothub_cli.utils import make_entities_yml
+from bothub_cli.utils import make_etc_json
+from bothub_cli.utils import make_etc_yml
 
 
 class Cli(object):
@@ -350,3 +361,127 @@ class Cli(object):
         )
         return {'bot': bot, 'channel_client': channel_client, 'storage_client': storage_client,
                 'nlu_client_factory': nlu_client_factory}
+
+    def get_credential(self, nlu):
+        self._load_auth()
+        project_id = self._get_current_project_id()
+        nlu = self.api.get_project_nlu(project_id, nlu)
+        return nlu['credentials']
+
+    def push_agent(self):
+        agent_id = self.get_credential('dialogflow')['agent_id']
+        client = dialogflow.AgentsClient()
+        parent = client.project_path(agent_id)
+        response = client.get_agent(parent)
+        agent_name = response.display_name
+        agent_folder = os.path.join("./dialogflow", agent_name)
+
+        try:
+            self._yml2json(agent_name, agent_id)
+            with zipfile.ZipFile(agent_folder + '.zip', 'w') as myzip:
+                for folder, subfolders, files in os.walk(agent_folder):
+                    for f in subfolders + files:
+                        if not f.endswith(".yml"):
+                            absname = os.path.join(folder, f)
+                            arcname = absname.replace("/dialogflow", "")
+                            myzip.write(absname, arcname)
+            self._upload_agent(agent_name, agent_id)
+        except google.api_core.exceptions.InvalidArgument:
+            raise exc.InvalidYamlFormat()
+        except TypeError:
+            raise exc.InvalidYamlFormat()
+
+    def pull_agent(self, agent_id=None):
+        try:
+            if not agent_id:
+                agent_id = self.get_credential('dialogflow')['agent_id']
+            client = dialogflow.AgentsClient()
+            parent = client.project_path(agent_id)
+            response = client.get_agent(parent)
+            agent_name = response.display_name
+            if not os.path.exists("./dialogflow"):
+                os.mkdir("./dialogflow")
+
+            self._download_agent(agent_name, agent_id)
+            self._json2yml(agent_name, agent_id)
+        except google.api_core.exceptions.PermissionDenied:
+            raise exc.InvalidAgentId(agent_id)
+        except google.auth.exceptions.DefaultCredentialsError:
+            raise exc.InvalidCredentialPath()
+
+    def isValidAgentId(self, agent_id):
+        client = dialogflow.AgentsClient()
+        parent = client.project_path(agent_id)
+        response = client.get_agent(parent)
+
+    def _upload_agent(self, agent_name, agent_id):
+        client = dialogflow.AgentsClient()
+        parent = client.project_path(agent_id)
+
+        in_file = open(os.path.join("./dialogflow", agent_name + ".zip"), "rb")
+        data = in_file.read()
+        response = client.restore_agent(parent, agent_content=data)
+
+    def _download_agent(self, agent_name, agent_id):
+        client = dialogflow.AgentsClient()
+        parent = client.project_path(agent_id)
+
+        agent_folder = os.path.join("./dialogflow", agent_name)
+        if os.path.exists(agent_folder):
+            shutil.rmtree(agent_folder)
+        os.mkdir(agent_folder)
+
+        response = client.export_agent(parent).operation.response.value
+        zip_file = zipfile.ZipFile(io.BytesIO(response), "r")
+        for filename in zip_file.namelist():
+            split_name = filename.split('/')
+            for name in split_name[:-1]:
+                if not os.path.exists(os.path.join(agent_folder, name)):
+                    os.mkdir(os.path.join(agent_folder, name))
+            with open(os.path.join(agent_folder, filename), "wb") as f:
+                f.write(zip_file.read(filename))
+
+    def _yml2json(self, agent_name, agent_id):
+        agent_folder = os.path.join("./dialogflow", agent_name)
+        lang = self._get_dialogflow_lang(agent_id)
+
+        package_path = os.path.join(agent_folder, "package.json")
+        if os.path.exists(package_path):
+            os.remove(package_path)
+        agent_path = os.path.join(agent_folder, "agent.json")
+        if os.path.exists(agent_path):
+            os.remove(agent_path)
+
+        if os.path.exists(os.path.join(agent_folder, "intents")):
+            shutil.rmtree(os.path.join(agent_folder, "intents"))
+        os.mkdir(os.path.join(agent_folder, "intents"))
+
+        with open(os.path.join(agent_folder, "intents.yml"), "r") as stream:
+            intents_docs = yaml.load_all(stream) 
+            for doc in intents_docs:
+                for key, value in doc.items():
+                    make_intents_json(agent_folder, key, value, lang)
+        if os.path.exists(os.path.join(agent_folder, "entities")):
+            shutil.rmtree(os.path.join(agent_folder, "entities"))
+        os.mkdir(os.path.join(agent_folder, "entities"))
+        with open(os.path.join(agent_folder, "entities.yml"), "r") as stream:
+            entities_docs = yaml.load_all(stream)
+            for doc in entities_docs:
+                for key, value in doc.items():
+                    make_entities_json(agent_folder, key, value, lang)
+        make_etc_json(agent_folder)
+
+    def _json2yml(self, agent_name, agent_id):
+        agent_folder = os.path.join("./dialogflow", agent_name)
+        lang = self._get_dialogflow_lang(agent_id)
+
+        make_intents_yml(agent_folder, lang)
+        make_entities_yml(agent_folder, lang)
+        make_etc_yml(agent_folder)
+
+    def _get_dialogflow_lang(self, agent_id):
+        client = dialogflow.AgentsClient()
+        parent = client.project_path(agent_id)
+        response = client.get_agent(parent)
+        lang = response.default_language_code
+        return lang

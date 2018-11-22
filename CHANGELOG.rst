@@ -1,3 +1,9 @@
+0.1.20
+------
+
+* add a dialogflow nlu
+* add ``dialogflow`` command
+
 0.1.19
 ------
 

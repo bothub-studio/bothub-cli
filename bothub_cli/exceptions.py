@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import (absolute_import, division, print_function, unicode_literals)
-
+import google.auth.exceptions as g_auth_exc
+import google.api_core.exceptions as g_core_exc
 
 class CliException(Exception):
     pass
@@ -39,6 +40,24 @@ class AuthenticationFailed(InvalidCredential):
         super(AuthenticationFailed, self).__init__(msg)
 
 
+class InvalidAgentId(InvalidCredential):
+    def __init__(self, agent_id):
+        msg = 'Invalid agent id: {}'.format(agent_id)
+        super(InvalidAgentId, self).__init__(msg)
+
+
+class InvalidCredentialPath(InvalidCredential):
+    def __init__(self):
+        msg = 'Invalid credentials path. Please check credentials path'
+        super(InvalidCredentialPath, self).__init__(msg)
+
+
+class AgentIdNotFound(InvalidCredential):
+    def __init__(self, agent_id):
+        msg = "No such agent id: {}.".format(agent_id)
+        super(AgentIdNotFound, self).__init__(msg)
+
+
 class NoCredential(CliException):
     pass
 
@@ -46,8 +65,16 @@ class NoCredential(CliException):
 class Duplicated(CliException):
     pass
 
+
 class InvalidJsonFormat(CliException):
     pass
+
+
+class InvalidYamlFormat(CliException):
+    def __init__(self):
+        _msg = "There is wrong grammer in yaml file. Please check dialogflow yaml file."
+        super(InvalidYamlFormat, self).__init__(_msg)
+
 
 class ProjectNameDuplicated(Duplicated):
     def __init__(self, name):
