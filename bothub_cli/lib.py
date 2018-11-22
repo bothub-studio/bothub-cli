@@ -398,7 +398,7 @@ class Cli(object):
             agent_name = response.display_name
             if not os.path.exists("./dialogflow"):
                 os.mkdir("./dialogflow")
-                
+
             self._download_agent(agent_name, agent_id)
             self._json2yml(agent_name, agent_id)
         except google.api_core.exceptions.PermissionDenied:
@@ -414,7 +414,7 @@ class Cli(object):
     def _upload_agent(self, agent_name, agent_id):
         client = dialogflow.AgentsClient()
         parent = client.project_path(agent_id)
-        
+
         in_file = open(os.path.join("./dialogflow", agent_name + ".zip"), "rb")
         data = in_file.read()
         response = client.restore_agent(parent, agent_content=data)
@@ -452,12 +452,12 @@ class Cli(object):
         if os.path.exists(os.path.join(agent_folder, "intents")):
             shutil.rmtree(os.path.join(agent_folder, "intents"))
         os.mkdir(os.path.join(agent_folder, "intents"))
-        
+
         with open(os.path.join(agent_folder, "intents.yml"), "r") as stream:
             intents_docs = yaml.load_all(stream) 
             for doc in intents_docs:
                 for key, value in doc.items():
-                    make_intents_json(agent_folder, key, value, lang)     
+                    make_intents_json(agent_folder, key, value, lang)
         if os.path.exists(os.path.join(agent_folder, "entities")):
             shutil.rmtree(os.path.join(agent_folder, "entities"))
         os.mkdir(os.path.join(agent_folder, "entities"))
@@ -472,7 +472,7 @@ class Cli(object):
         agent_folder = os.path.join("./dialogflow", agent_name)
         lang = self._get_dialogflow_lang(agent_id)
 
-        make_intents_yml(agent_folder, lang)            
+        make_intents_yml(agent_folder, lang)
         make_entities_yml(agent_folder, lang)
         make_etc_yml(agent_folder)
 
