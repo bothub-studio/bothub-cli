@@ -58,13 +58,13 @@ class AgentIdNotFound(InvalidCredential):
         super(AgentIdNotFound, self).__init__(msg)
 
 
-
 class NoCredential(CliException):
     pass
 
 
 class Duplicated(CliException):
     pass
+
 
 class InvalidJsonFormat(CliException):
     pass
@@ -74,6 +74,7 @@ class InvalidYamlFormat(CliException):
     def __init__(self):
         _msg = "There is wrong grammer in yaml file. Please check dialogflow yaml file."
         super(InvalidYamlFormat, self).__init__(_msg)
+
 
 class ProjectNameDuplicated(Duplicated):
     def __init__(self, name):
